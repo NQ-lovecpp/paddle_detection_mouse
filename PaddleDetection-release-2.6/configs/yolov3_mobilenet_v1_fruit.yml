@@ -1,0 +1,33 @@
+# 配置文件示例（configs/yolov3_mobilenet_v1_fruit.yml）
+_BASE_: [
+  'D:/Code/third_party/PaddleDetection-release-2.6/configs/datasets/coco_detection.yml',
+  'D:/Code/third_party/PaddleDetection-release-2.6/configs/runtime.yml',
+  'D:/Code/third_party/PaddleDetection-release-2.6/configs/yolov3/_base_/optimizer_270e.yml',
+  'D:/Code/third_party/PaddleDetection-release-2.6/configs/yolov3/_base_/yolov3_mobilenet_v1.yml',
+  'D:/Code/third_party/PaddleDetection-release-2.6/configs/yolov3/_base_/yolov3_reader.yml'
+]
+
+snapshot_epoch: 10
+weights: output/yolov3_mobilenet_v1/model_final
+metric: COCO
+
+# 数据集路径配置
+dataset:
+  !COCODataSet
+    image_dir: dataset/fruit/fruit-detection/JPEGImages
+    anno_path: dataset/fruit/fruit-detection/jsonoutput/instances_train2017.json
+    dataset_dir: dataset/fruit/fruit-detection
+
+# 评估时数据集路径配置
+EvalDataset:
+  !COCODataSet
+    image_dir: dataset/fruit/fruit-detection/JPEGImages
+    anno_path: dataset/fruit/fruit-detection/jsonoutput/instances_val2017.json
+    dataset_dir: dataset/fruit/fruit-detection
+
+# 训练数据集路径配置
+TrainDataset:
+  !COCODataSet
+    image_dir: dataset/fruit/fruit-detection/JPEGImages
+    anno_path: dataset/fruit/fruit-detection/jsonoutput/instances_train2017.json
+    dataset_dir: dataset/fruit/fruit-detection

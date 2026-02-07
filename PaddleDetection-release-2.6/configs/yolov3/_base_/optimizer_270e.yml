@@ -1,0 +1,27 @@
+epoch: 50        #训练样本被用于训练更新的次数 270 50
+
+LearningRate:
+  base_lr: 0.01 #学习率大小，小的学习率训练慢，但稳定；反之，快，不稳定 0.0001
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1   #学习率衰减系数
+    milestones:  #改变学习率的特定的迭代阶段
+    - 30  # 调整衰减点
+    - 40
+
+    # - 70  # 调整衰减点
+    # - 88
+
+    # - 216
+    # - 243
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 1500  #学习阶段的迭代次数  4000
+
+OptimizerBuilder:
+  optimizer:
+    momentum: 0.9 #抑制梯度下降方向的震荡，确保稳定地加速运行
+    type: Momentum
+  regularizer:
+    factor: 0.0005
+    type: L2      #正则化，防止过拟合
