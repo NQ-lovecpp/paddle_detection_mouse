@@ -125,7 +125,12 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold):
 
         # draw label
         text = "{} {:.2f}".format(catid2name[catid], score)
-        tw, th = draw.textsize(text)
+        if hasattr(draw, 'textbbox'):
+            # Pillow >= 10.0: textsize 已移除，改用 textbbox
+            bbox_t = draw.textbbox((0, 0), text)
+            tw, th = bbox_t[2] - bbox_t[0], bbox_t[3] - bbox_t[1]
+        else:
+            tw, th = draw.textsize(text)
         draw.rectangle(
             [(xmin + 1, ymin - th), (xmin + tw + 1, ymin)], fill=color)
         draw.text((xmin + 1, ymin - th), text, fill=(255, 255, 255))

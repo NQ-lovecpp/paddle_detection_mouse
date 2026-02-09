@@ -7,12 +7,17 @@
 # 一、数据集 — 图片和标注文件（精确目录）
 # =============================================================================
 
-# dog_mouse_other_voc 数据集（3536张图片 + 3530个标注，约363MB）
+# mouse_other_voc 数据集（10816张图片 + 10816个标注）
+PaddleDetection-release-2.6/dataset/mouse_other_voc/images/
+PaddleDetection-release-2.6/dataset/mouse_other_voc/annotations/
+
+# 旧的 dog_mouse_other_voc 数据集（已废弃，合并到 mouse_other_voc）
 PaddleDetection-release-2.6/dataset/dog_mouse_other_voc/images/
 PaddleDetection-release-2.6/dataset/dog_mouse_other_voc/annotations/
-
-# dog_mouse_other_voc 数据集压缩包（16MB）
 PaddleDetection-release-2.6/dataset/dog_mouse_other_voc.rar
+
+# RawData 原始数据（已整合）
+RawData/
 
 # roadsign_voc 数据集（877张图片 + 877个标注，约223MB）
 PaddleDetection-release-2.6/dataset/roadsign_voc/images/
@@ -52,6 +57,10 @@ PaddleDetection-release-2.6/output/
 # 推理模型导出目录
 PaddleDetection-release-2.6/inference_model/
 PaddleDetection-release-2.6/output_inference/
+
+# VisualDL 训练日志（自动生成，可再次生成）
+PaddleDetection-release-2.6/vdl_log_dir/
+PaddleDetection-release-2.6/vdl_dir/
 
 # =============================================================================
 # 三、模型权重文件（通用后缀，防止遗漏）

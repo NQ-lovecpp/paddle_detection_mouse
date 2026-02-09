@@ -219,10 +219,11 @@ def main():
         cfg.use_gpu = False
     check_gpu(cfg.use_gpu)
     # check if paddlepaddle version is satisfied
-    check_version('develop')
+    # check_version('develop')  # 跳过版本检查, Paddle 2.5.1 功能兼容
 
     # get dataset
-    dataset = cfg['TrainDataset']
+    from ppdet.core.workspace import create
+    dataset = create('TrainDataset')()
     if FLAGS.size:
         if ',' in FLAGS.size:
             size = list(map(int, FLAGS.size.split(',')))

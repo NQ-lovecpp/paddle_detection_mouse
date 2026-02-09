@@ -1,13 +1,12 @@
 _BASE_: [
-  '../datasets/dog_mouse_other_voc.yml', # 根目录datasets配置文件，包含了测试集和训练集的配置
+  '../datasets/mouse_other_voc.yml',     # 数据集配置：mouse + other 二分类
   '../runtime.yml',                      # 运行时配置，所有网络共用的配置，例如是否使用GPU，NPU
   '_base_/optimizer_270e.yml',           # 优化器配置
   '_base_/yolov3_mobilenet_v1.yml',      # yolov3网络结构配置文件
   '_base_/yolov3_reader.yml',            # yolov3 Reader模块配置
 ]
-pretrain_weights: https://paddledet.bj.bcebos.com/models/yolov3_mobilenet_v1_270e_coco.pdparams # 模型预训练的权重，在百度云
-weights: output/yolov3_my_dog_mouse_voc/model_final.pdparams # 训练过程中保存的权重参数，记录了训练过程中，卷积、全连接层的权重，偏置参数
-# weights: output/trained_models/yolov3_my_dog_mouse_voc_1err/model_final.pdparams
+pretrain_weights: https://paddledet.bj.bcebos.com/models/yolov3_mobilenet_v1_270e_coco.pdparams # 模型预训练的权重
+weights: output/yolov3_mouse_other_voc/model_final.pdparams
 
 YOLOv3Loss:
   ignore_thresh: 0.7

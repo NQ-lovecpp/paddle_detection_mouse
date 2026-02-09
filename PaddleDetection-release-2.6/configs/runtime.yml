@@ -3,7 +3,7 @@ use_xpu: false
 use_mlu: false
 use_npu: false
 log_iter: 20
-save_dir: output/yolov3_my_dog_mouse_voc
+save_dir: output/yolov3_mouse_other_voc
 snapshot_epoch: 5    # 1
 print_flops: false
 print_params: false

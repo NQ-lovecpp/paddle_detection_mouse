@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOC Viewer + Inference</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #232733; --surface3: #2a2e3d;
+    --border: #2d3140; --text: #e1e4ed; --text2: #8b8fa3; --text3: #5a5e72;
+    --accent: #6c8cff; --accent2: #4a6cf7; --green: #4ade80; --orange: #fb923c;
+    --red: #f87171; --pink: #f472b6; --cyan: #22d3ee; --yellow: #facc15;
+    --purple: #a78bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  /* ── 顶部标签栏 ── */
+  .top-bar {
+    display: flex; align-items: center; gap: 0;
+    background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .top-bar .logo { padding: 10px 20px; font-size: 15px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .tab-btn {
+    padding: 12px 24px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; background: transparent; color: var(--text2);
+    border-bottom: 2px solid transparent; transition: all .15s;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .top-bar .stats { margin-left: auto; padding-right: 20px; font-size: 13px; color: var(--text2); display: flex; gap: 16px; }
+  .top-bar .stats span { display: flex; align-items: center; gap: 4px; }
+  .top-bar .stats .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* ── 内容区 ── */
+  .tab-content { display: none; flex: 1; overflow: hidden; }
+  .tab-content.active { display: flex; }
+
+  /* ═══ 标注查看 Tab ═══ */
+  .sidebar {
+    width: 280px; min-width: 280px; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  }
+  .sidebar-header { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-header select, .form-select {
+    width: 100%; padding: 8px 10px; background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  .sidebar-header select:focus, .form-select:focus { outline: none; border-color: var(--accent); }
+  .filter-bar { padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 4px 10px; font-size: 11px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text2); transition: all .15s;
+  }
+  .filter-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent); }
+  .filter-btn:hover { border-color: var(--accent); }
+  .search-bar { padding: 8px 16px; border-bottom: 1px solid var(--border); }
+  .search-bar input, .form-input {
+    width: 100%; padding: 7px 10px; background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; font-size: 13px;
+  }
+  .search-bar input:focus, .form-input:focus { outline: none; border-color: var(--accent); }
+  .search-bar input::placeholder, .form-input::placeholder { color: var(--text2); }
+  .file-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .file-item {
+    padding: 8px 16px; cursor: pointer; font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-left: 3px solid transparent; transition: all .1s;
+  }
+  .file-item:hover { background: var(--surface2); }
+  .file-item.active { background: var(--surface2); border-left-color: var(--accent); }
+  .file-item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .file-item .badge {
+    font-size: 10px; padding: 2px 6px; border-radius: 8px;
+    background: var(--surface2); color: var(--text2); margin-left: 8px; white-space: nowrap;
+  }
+  .file-item .badge.mouse { background: #1a3a2a; color: var(--green); }
+  .file-item .badge.other { background: #3a2a1a; color: var(--orange); }
+  .file-item .no-ann { color: var(--red); font-size: 10px; }
+  .viewer { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .viewer-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .viewer-toolbar .nav-btns { display: flex; gap: 6px; }
+  .btn {
+    padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text); transition: all .15s;
+  }
+  .btn:hover { background: var(--accent2); border-color: var(--accent); color: #fff; }
+  .btn-primary { background: var(--accent2); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent); }
+  .btn-danger { background: #7f1d1d; border-color: var(--red); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .viewer-toolbar .page-info { font-size: 13px; color: var(--text2); }
+  .viewer-toolbar .zoom-btns { display: flex; gap: 6px; align-items: center; }
+  .viewer-toolbar .zoom-label { font-size: 12px; color: var(--text2); min-width: 42px; text-align: center; }
+  .canvas-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    overflow: auto; padding: 20px; position: relative;
+  }
+  .canvas-container { position: relative; display: inline-block; box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+  .canvas-container img { display: block; max-width: none; }
+  .canvas-container canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+  .info-panel {
+    width: 260px; min-width: 260px; background: var(--surface);
+    border-left: 1px solid var(--border); overflow-y: auto; padding: 16px;
+  }
+  .info-panel h3 { font-size: 13px; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .info-section { margin-bottom: 20px; }
+  .info-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .info-row .label { color: var(--text2); }
+  .info-row .value { color: var(--text); font-weight: 500; }
+  .obj-card {
+    background: var(--surface2); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+    border-left: 3px solid var(--accent);
+  }
+  .obj-card .obj-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .obj-card .obj-bbox { font-size: 12px; color: var(--text2); font-family: monospace; }
+  .obj-card .obj-size { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .welcome {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--text2); font-size: 15px; text-align: center; line-height: 2;
+  }
+
+  /* ═══ 推理 Tab ═══ */
+  .infer-layout { display: flex; flex: 1; overflow: hidden; }
+  .infer-sidebar {
+    width: 380px; min-width: 380px; background: var(--surface);
+    border-right: 1px solid var(--border); overflow-y: auto; padding: 0;
+  }
+  .infer-sidebar h2 {
+    font-size: 14px; padding: 14px 20px; background: var(--surface2);
+    border-bottom: 1px solid var(--border); color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .infer-sidebar h2 .icon { font-size: 16px; }
+  .form-group { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .form-label {
+    display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px;
+    font-weight: 500; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .form-label .required { color: var(--red); }
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .form-row { display: flex; gap: 10px; align-items: center; }
+  .form-row .form-input, .form-row .form-select { flex: 1; }
+  .form-checkbox {
+    display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;
+  }
+  .form-checkbox input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .form-actions { padding: 16px 20px; display: flex; gap: 10px; }
+  .form-actions .btn { flex: 1; padding: 10px; font-size: 14px; font-weight: 600; }
+
+  /* 推理结果区 */
+  .infer-result { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .infer-result-header {
+    padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .status-dot.idle { background: var(--text3); }
+  .status-dot.running { background: var(--yellow); animation: pulse 1s infinite; }
+  .status-dot.success { background: var(--green); }
+  .status-dot.error { background: var(--red); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .infer-image-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    overflow: auto; padding: 20px; background: var(--bg);
+  }
+  .infer-image-wrap img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    box-shadow: 0 4px 24px rgba(0,0,0,.5); border-radius: 4px;
+  }
+  .infer-log {
+    height: 220px; min-height: 100px; background: #0d0f14; border-top: 1px solid var(--border);
+    overflow-y: auto; padding: 12px 16px; font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12px; line-height: 1.6; color: var(--green); white-space: pre-wrap; word-break: break-all;
+    resize: vertical;
+  }
+  .infer-log .error-line { color: var(--red); }
+  .infer-log .cmd-line { color: var(--cyan); font-weight: bold; }
+
+  /* 分组折叠 */
+  .form-section {
+    border-bottom: 1px solid var(--border);
+  }
+  .form-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; cursor: pointer; user-select: none;
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
+  .form-section-header:hover { background: var(--surface2); }
+  .form-section-header .arrow { color: var(--text2); transition: transform .2s; font-size: 10px; }
+  .form-section-header .arrow.open { transform: rotate(90deg); }
+  .form-section-body { display: none; }
+  .form-section-body.open { display: block; }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+  /* 拖拽上传 */
+  .drop-zone {
+    border: 2px dashed var(--border); border-radius: 8px; padding: 20px;
+    text-align: center; color: var(--text2); font-size: 13px; cursor: pointer;
+    transition: all .2s; margin: 8px 20px;
+  }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); color: var(--accent); background: rgba(108,140,255,0.05); }
+  .drop-zone .icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* Quick-pick 按钮 */
+  .quick-pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .quick-pick .qp-btn {
+    padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text2);
+  }
+  .quick-pick .qp-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ═══ 顶栏 ═══ -->
+<div class="top-bar">
+  <span class="logo">VOC Viewer</span>
+  <button class="tab-btn active" onclick="switchTab('viewer')">标注查看</button>
+  <button class="tab-btn" onclick="switchTab('infer')">模型推理</button>
+  <div class="stats" id="globalStats"></div>
+</div>
+
+<!-- ═══ Tab 1: 标注查看 ═══ -->
+<div class="tab-content active" id="tab-viewer">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <select id="datasetSelect"><option value="">-- 选择数据集 --</option></select>
+    </div>
+    <div class="filter-bar" id="filterBar"></div>
+    <div class="search-bar"><input type="text" id="searchInput" placeholder="搜索文件名..."></div>
+    <div class="file-list" id="fileList"></div>
+  </div>
+  <div class="viewer" id="viewer">
+    <div class="welcome" id="welcome">
+      <div>
+        <div style="font-size:40px;margin-bottom:12px;">&#128270;</div>
+        <div>选择左侧数据集开始浏览</div>
+        <div style="font-size:13px;margin-top:8px;">支持 VOC 格式 (images/ + annotations/)</div>
+      </div>
+    </div>
+    <div id="viewerContent" style="display:none;flex-direction:column;overflow:hidden;">
+      <div class="viewer-toolbar">
+        <div class="nav-btns">
+          <button class="btn" onclick="navigate(-1)" title="上一张 (A / ←)">&#9664; 上一张</button>
+          <button class="btn" onclick="navigate(1)" title="下一张 (D / →)">下一张 &#9654;</button>
+          <button class="btn btn-primary" onclick="inferCurrentImage()" title="推理当前图片">&#9654; 推理此图</button>
+        </div>
+        <span class="page-info" id="pageInfo"></span>
+        <div class="zoom-btns">
+          <button class="btn" onclick="zoom(-0.1)">-</button>
+          <span class="zoom-label" id="zoomLabel">100%</span>
+          <button class="btn" onclick="zoom(0.1)">+</button>
+          <button class="btn" onclick="zoomFit()">适应</button>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="canvas-container" id="canvasContainer">
+          <img id="mainImg" />
+          <canvas id="overlayCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="info-panel" id="infoPanel">
+    <div class="info-section">
+      <h3>图片信息</h3>
+      <div id="imageInfo"><span style="color:var(--text2);font-size:13px;">未选择图片</span></div>
+    </div>
+    <div class="info-section">
+      <h3>标注对象</h3>
+      <div id="objectInfo"><span style="color:var(--text2);font-size:13px;">无</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 2: 模型推理 ═══ -->
+<div class="tab-content" id="tab-infer">
+  <div class="infer-layout">
+    <div class="infer-sidebar">
+      <h2><span class="icon">&#9881;</span> 推理参数配置</h2>
+
+      <!-- 基础配置 -->
+      <div class="form-section">
+        <div class="form-section-header" onclick="toggleSection(this)">
+          基础配置 <span class="arrow open">&#9654;</span>
+        </div>
+        <div class="form-section-body open">
+          <div class="form-group">
+            <label class="form-label">配置文件 (-c) <span class="required">*</span></label>
+            <select id="infer_config" class="form-select"></select>
+            <div class="quick-pick" id="configQuickPick"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">模型权重 (-o weights=) <span class="required">*</span></label>
+            <select id="infer_weights" class="form-select"></select>
+            <div class="quick-pick" id="weightsQuickPick"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">额外 -o 参数</label>
+            <input type="text" id="infer_extra_opts" class="form-input" placeholder="例: use_gpu=True num_classes=2">
+            <div class="form-hint">空格分隔的 key=value 对，覆盖 YAML 配置</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输入源 -->
+      <div class="form-section">
+        <div class="form-section-header" onclick="toggleSection(this)">
+          输入源 <span class="arrow open">&#9654;</span>
+        </div>
+        <div class="form-section-body open">
+          <div class="form-group">
+            <label class="form-label">推理图片 (--infer_img)</label>
+            <input type="text" id="infer_img" class="form-input" placeholder="单张图片路径，如 dataset/mouse_other_voc/images/mouse_00001.jpg">
+            <div class="quick-pick">
+              <span class="qp-btn" onclick="pickCurrentViewerImage()">&#128247; 当前查看图</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">推理目录 (--infer_dir)</label>
+            <input type="text" id="infer_dir" class="form-input" placeholder="图片目录，如 dataset/mouse_other_voc/images/">
+            <div class="form-hint">infer_img 优先级高于 infer_dir</div>
+          </div>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileUpload').click()">
+            <div class="icon">&#128228;</div>
+            <div>拖拽图片到此处上传，或点击选择</div>
+            <input type="file" id="fileUpload" accept="image/*" style="display:none" onchange="handleUpload(this)">
+          </div>
+        </div>
+      </div>
+
+      <!-- 输出配置 -->
+      <div class="form-section">
+        <div class="form-section-header" onclick="toggleSection(this)">
+          输出配置 <span class="arrow">&#9654;</span>
+        </div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label class="form-label">输出目录 (--output_dir)</label>
+            <input type="text" id="infer_output_dir" class="form-input" placeholder="默认: output/_web_infer_vis">
+          </div>
+          <div class="form-group">
+            <label class="form-label">绘制阈值 (--draw_threshold)</label>
+            <div class="form-row">
+              <input type="range" id="infer_threshold_slider" min="0" max="1" step="0.05" value="0.3"
+                     style="flex:1;accent-color:var(--accent);" oninput="syncThreshold(this.value)">
+              <input type="number" id="infer_threshold" class="form-input" value="0.3" min="0" max="1" step="0.05"
+                     style="width:70px;" oninput="document.getElementById('infer_threshold_slider').value=this.value">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="infer_save_results"> 保存检测结果 (--save_results)
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="infer_visualize" checked> 保存可视化图 (--visualize)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slim 配置 -->
+      <div class="form-section">
+        <div class="form-section-header" onclick="toggleSection(this)">
+          模型压缩 Slim <span class="arrow">&#9654;</span>
+        </div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label class="form-label">Slim 配置 (--slim_config)</label>
+            <select id="infer_slim_config" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="infer_use_vdl"> 使用 VisualDL (--use_vdl)
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">VDL 日志目录 (--vdl_log_dir)</label>
+            <input type="text" id="infer_vdl_log_dir" class="form-input" placeholder="默认: vdl_log_dir/image">
+          </div>
+        </div>
+      </div>
+
+      <!-- 切片推理 -->
+      <div class="form-section">
+        <div class="form-section-header" onclick="toggleSection(this)">
+          切片推理 (小目标增强) <span class="arrow">&#9654;</span>
+        </div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="infer_slice_infer"> 启用切片推理 (--slice_infer)
+            </label>
+            <div class="form-hint">将大图切片后分别推理再合并，适合小目标检测</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">切片大小 (--slice_size)</label>
+            <input type="text" id="infer_slice_size" class="form-input" placeholder="如: 640 640">
+          </div>
+          <div class="form-group">
+            <label class="form-label">重叠比例 (--overlap_ratio)</label>
+            <input type="text" id="infer_overlap_ratio" class="form-input" placeholder="如: 0.25 0.25">
+          </div>
+          <div class="form-group">
+            <label class="form-label">合并方法 (--combine_method)</label>
+            <select id="infer_combine_method" class="form-select">
+              <option value="">默认 (nms)</option>
+              <option value="nms">nms</option>
+              <option value="nmm">nmm</option>
+              <option value="concat">concat</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">合并阈值 (--match_threshold)</label>
+            <input type="number" id="infer_match_threshold" class="form-input" placeholder="0.6" min="0" max="1" step="0.05">
+          </div>
+          <div class="form-group">
+            <label class="form-label">匹配度量 (--match_metric)</label>
+            <select id="infer_match_metric" class="form-select">
+              <option value="">默认 (iou)</option>
+              <option value="iou">iou</option>
+              <option value="ios">ios</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 执行按钮 -->
+      <div class="form-actions">
+        <button class="btn btn-primary" id="runInferBtn" onclick="runInference()">&#9654; 开始推理</button>
+        <button class="btn" onclick="generateCommand()">&#128203; 生成命令</button>
+      </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div class="infer-result">
+      <div class="infer-result-header">
+        <span class="status-dot idle" id="inferStatusDot"></span>
+        <span id="inferStatusText" style="font-size:13px;color:var(--text2);">就绪</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--text3);" id="inferTimer"></span>
+      </div>
+      <div class="infer-image-wrap" id="inferImageWrap">
+        <div style="text-align:center;color:var(--text3);">
+          <div style="font-size:48px;margin-bottom:12px;">&#129302;</div>
+          <div>配置参数后点击「开始推理」</div>
+        </div>
+      </div>
+      <div class="infer-log" id="inferLog">等待推理...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  全局状态
+// ═══════════════════════════════════════
+const LABEL_COLORS = {
+  mouse: {box:'#4ade80', fill:'rgba(74,222,128,0.12)', text:'#4ade80'},
+  other: {box:'#fb923c', fill:'rgba(251,146,60,0.12)', text:'#fb923c'},
+  dog:   {box:'#f87171', fill:'rgba(248,113,113,0.12)', text:'#f87171'},
+  default:{box:'#6c8cff', fill:'rgba(108,140,255,0.12)', text:'#6c8cff'},
+};
+
+let state = {
+  datasets:[], currentDataset:null, items:[], filteredItems:[], currentIndex:-1,
+  annotation:null, scale:1, labels:{}, activeFilters:new Set(), searchTerm:'',
+};
+
+let inferModels = [];
+let inferConfigs = [];
+let inferPollTimer = null;
+
+// ═══════════════════════════════════════
+//  Tab 切换
+// ═══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('.arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════
+//  标注查看部分
+// ═══════════════════════════════════════
+async function api(path) { return (await fetch(path)).json(); }
+
+async function init() {
+  const data = await api('/api/datasets');
+  state.datasets = data.datasets || [];
+  const sel = document.getElementById('datasetSelect');
+  state.datasets.forEach(ds => {
+    const opt = document.createElement('option');
+    opt.value = ds.name;
+    opt.textContent = `${ds.name} (${ds.image_count} imgs)`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => loadDataset(sel.value));
+  document.getElementById('searchInput').addEventListener('input', e => {
+    state.searchTerm = e.target.value.toLowerCase();
+    filterAndRender();
+  });
+  // 加载推理相关数据
+  loadInferData();
+}
+
+async function loadDataset(name) {
+  if (!name) return;
+  state.currentDataset = name;
+  const data = await api(`/api/scan?path=${encodeURIComponent(name)}`);
+  state.items = data.items || [];
+  state.labels = data.labels || {};
+  state.activeFilters.clear();
+  state.searchTerm = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('globalStats').innerHTML =
+    `<span><span class="dot" style="background:var(--green)"></span> 图片: ${data.total_images}</span>` +
+    `<span><span class="dot" style="background:var(--accent)"></span> 已标注: ${data.annotated}</span>` +
+    Object.entries(state.labels).map(([k,v]) =>
+      `<span><span class="dot" style="background:${(LABEL_COLORS[k]||LABEL_COLORS.default).box}"></span> ${k}: ${v}</span>`
+    ).join('');
+  const fb = document.getElementById('filterBar');
+  fb.innerHTML = '';
+  const allBtn = mkFilter('all', `全部 (${state.items.length})`);
+  allBtn.classList.add('active');
+  fb.appendChild(allBtn);
+  Object.entries(state.labels).forEach(([k,v]) => fb.appendChild(mkFilter(k, `${k} (${v})`)));
+  filterAndRender();
+  if (state.filteredItems.length > 0) showItem(0);
+}
+
+function mkFilter(key, text) {
+  const btn = document.createElement('span');
+  btn.className = 'filter-btn' + (key==='all'?' active':'');
+  btn.textContent = text;
+  btn.dataset.key = key;
+  btn.onclick = () => {
+    if (key==='all') {
+      state.activeFilters.clear();
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    } else {
+      document.querySelector('.filter-btn[data-key="all"]').classList.remove('active');
+      btn.classList.toggle('active');
+      if (state.activeFilters.has(key)) state.activeFilters.delete(key);
+      else state.activeFilters.add(key);
+      if (state.activeFilters.size===0) document.querySelector('.filter-btn[data-key="all"]').classList.add('active');
+    }
+    filterAndRender();
+  };
+  return btn;
+}
+
+function filterAndRender() {
+  let items = state.items;
+  if (state.activeFilters.size > 0) {
+    items = items.filter(it => { for (const f of state.activeFilters) if (it.basename.startsWith(f)) return true; return false; });
+  }
+  if (state.searchTerm) items = items.filter(it => it.basename.toLowerCase().includes(state.searchTerm));
+  state.filteredItems = items;
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  state.filteredItems.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'file-item' + (idx===state.currentIndex?' active':'');
+    const prefix = item.basename.split('_')[0];
+    const badgeClass = LABEL_COLORS[prefix] ? prefix : '';
+    div.innerHTML = `<span class="name">${item.basename}</span>` +
+      (item.annotation ? `<span class="badge ${badgeClass}">${prefix}</span>` : `<span class="no-ann">无标注</span>`);
+    div.onclick = () => showItem(idx);
+    frag.appendChild(div);
+  });
+  list.appendChild(frag);
+}
+
+async function showItem(idx) {
+  if (idx < 0 || idx >= state.filteredItems.length) return;
+  state.currentIndex = idx;
+  const item = state.filteredItems[idx];
+  document.querySelectorAll('.file-item').forEach((el,i) => el.classList.toggle('active', i===idx));
+  const activeEl = document.querySelector('.file-item.active');
+  if (activeEl) activeEl.scrollIntoView({block:'nearest'});
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('viewerContent').style.display = 'flex';
+  const img = document.getElementById('mainImg');
+  img.src = `/images/${encodeURIComponent(item.image)}?dataset=${encodeURIComponent(state.currentDataset)}`;
+  await new Promise(r => { img.onload=r; img.onerror=r; });
+  state.annotation = null;
+  if (item.annotation) {
+    state.annotation = await api(`/api/annotation?dataset=${encodeURIComponent(state.currentDataset)}&file=${encodeURIComponent(item.annotation)}`);
+  }
+  zoomFit(); drawOverlay(); updateInfo(item); updatePageInfo();
+}
+
+function zoomFit() {
+  const img = document.getElementById('mainImg');
+  const wrap = document.getElementById('canvasWrap');
+  if (!img.naturalWidth) return;
+  state.scale = Math.min((wrap.clientWidth-40)/img.naturalWidth, (wrap.clientHeight-40)/img.naturalHeight, 1);
+  applyZoom();
+}
+function zoom(d) { state.scale = Math.max(0.1, Math.min(5, state.scale+d)); applyZoom(); }
+function applyZoom() {
+  const img = document.getElementById('mainImg'), c = document.getElementById('overlayCanvas');
+  const w = Math.round(img.naturalWidth*state.scale), h = Math.round(img.naturalHeight*state.scale);
+  img.style.width=w+'px'; img.style.height=h+'px';
+  c.width=w; c.height=h; c.style.width=w+'px'; c.style.height=h+'px';
+  document.getElementById('zoomLabel').textContent = Math.round(state.scale*100)+'%';
+  drawOverlay();
+}
+
+function drawOverlay() {
+  const c = document.getElementById('overlayCanvas'), ctx = c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  if (!state.annotation?.objects) return;
+  const s = state.scale;
+  state.annotation.objects.forEach(obj => {
+    const b = obj.bbox; if (!b || b.xmin===undefined) return;
+    const colors = LABEL_COLORS[obj.name] || LABEL_COLORS.default;
+    const x=b.xmin*s, y=b.ymin*s, w=(b.xmax-b.xmin)*s, h=(b.ymax-b.ymin)*s;
+    ctx.fillStyle=colors.fill; ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=colors.box; ctx.lineWidth=2; ctx.strokeRect(x,y,w,h);
+    const label=obj.name;
+    ctx.font=`bold ${Math.max(12,14*s)}px sans-serif`;
+    const tm=ctx.measureText(label), lh=Math.max(16,18*s), lx=x, ly=y-lh;
+    ctx.fillStyle=colors.box; ctx.fillRect(lx,ly<0?y:ly,tm.width+8,lh);
+    ctx.fillStyle='#fff'; ctx.textBaseline='middle'; ctx.fillText(label,lx+4,(ly<0?y:ly)+lh/2);
+  });
+}
+
+function updateInfo(item) {
+  const img = document.getElementById('mainImg');
+  let html = `<div class="info-row"><span class="label">文件名</span><span class="value">${item.image}</span></div>`;
+  html += `<div class="info-row"><span class="label">尺寸</span><span class="value">${img.naturalWidth} x ${img.naturalHeight}</span></div>`;
+  if (state.annotation?.size) {
+    const s = state.annotation.size;
+    html += `<div class="info-row"><span class="label">标注尺寸</span><span class="value">${s.width} x ${s.height}</span></div>`;
+  }
+  html += `<div class="info-row"><span class="label">有标注</span><span class="value">${item.annotation?'Yes':'No'}</span></div>`;
+  document.getElementById('imageInfo').innerHTML = html;
+  let ohtml = '';
+  if (state.annotation?.objects?.length > 0) {
+    state.annotation.objects.forEach(obj => {
+      const b = obj.bbox, colors = LABEL_COLORS[obj.name] || LABEL_COLORS.default;
+      const w=b.xmax-b.xmin, h=b.ymax-b.ymin;
+      ohtml += `<div class="obj-card" style="border-left-color:${colors.box}">
+        <div class="obj-name" style="color:${colors.text}">${obj.name}</div>
+        <div class="obj-bbox">[${b.xmin}, ${b.ymin}, ${b.xmax}, ${b.ymax}]</div>
+        <div class="obj-size">${w} x ${h} px${obj.difficult?' | difficult':''}</div></div>`;
+    });
+  } else ohtml = '<span style="color:var(--text2);font-size:13px;">无标注对象</span>';
+  document.getElementById('objectInfo').innerHTML = ohtml;
+}
+
+function updatePageInfo() {
+  document.getElementById('pageInfo').textContent = `${state.currentIndex+1} / ${state.filteredItems.length}`;
+}
+function navigate(delta) {
+  const i = state.currentIndex + delta;
+  if (i >= 0 && i < state.filteredItems.length) showItem(i);
+}
+
+// ═══════════════════════════════════════
+//  推理部分
+// ═══════════════════════════════════════
+async function loadInferData() {
+  const [modelsData, configsData, slimData] = await Promise.all([
+    api('/api/models'), api('/api/configs'), api('/api/slim_configs')
+  ]);
+  inferModels = modelsData.models || [];
+  inferConfigs = configsData.configs || [];
+
+  // 填充配置下拉框
+  const cfgSel = document.getElementById('infer_config');
+  cfgSel.innerHTML = '<option value="">-- 选择配置 --</option>';
+  inferConfigs.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.path; opt.textContent = c.name;
+    // 高亮自定义配置
+    if (c.path.includes('my_dog_mouse')) opt.style.color = '#4ade80';
+    cfgSel.appendChild(opt);
+  });
+  // 快捷选择
+  const cfgQP = document.getElementById('configQuickPick');
+  const customCfgs = inferConfigs.filter(c => c.path.includes('my_dog_mouse'));
+  customCfgs.forEach(c => {
+    const btn = document.createElement('span');
+    btn.className = 'qp-btn';
+    btn.textContent = c.name.split('/').pop();
+    btn.onclick = () => { cfgSel.value = c.path; };
+    cfgQP.appendChild(btn);
+  });
+
+  // 填充权重下拉框
+  const wSel = document.getElementById('infer_weights');
+  wSel.innerHTML = '<option value="">-- 选择权重 --</option>';
+  inferModels.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.path; opt.textContent = m.name;
+    if (m.path.includes('best_model')) opt.style.color = '#4ade80';
+    wSel.appendChild(opt);
+  });
+  // 快捷: best_model
+  const wQP = document.getElementById('weightsQuickPick');
+  const bestModels = inferModels.filter(m => m.path.includes('best_model'));
+  bestModels.forEach(m => {
+    const btn = document.createElement('span');
+    btn.className = 'qp-btn';
+    btn.textContent = m.path.replace('output/', '').replace('/yolov3_my_dog_mouse_voc', '');
+    btn.onclick = () => { wSel.value = m.path; };
+    wQP.appendChild(btn);
+  });
+
+  // Slim 配置
+  const slimSel = document.getElementById('infer_slim_config');
+  (slimData.slim_configs || []).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.path; opt.textContent = s.name;
+    slimSel.appendChild(opt);
+  });
+}
+
+function syncThreshold(v) {
+  document.getElementById('infer_threshold').value = v;
+}
+
+function pickCurrentViewerImage() {
+  if (state.currentIndex >= 0 && state.currentDataset) {
+    const item = state.filteredItems[state.currentIndex];
+    document.getElementById('infer_img').value = `dataset/${state.currentDataset}/images/${item.image}`;
+  }
+}
+
+// 从标注查看页面快捷推理当前图片
+function inferCurrentImage() {
+  if (state.currentIndex < 0 || !state.currentDataset) return;
+  const item = state.filteredItems[state.currentIndex];
+  document.getElementById('infer_img').value = `dataset/${state.currentDataset}/images/${item.image}`;
+  // 切换到推理 Tab
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-infer').classList.add('active');
+  document.querySelectorAll('.tab-btn')[1].classList.add('active');
+}
+
+async function handleUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const ab = await file.arrayBuffer();
+  const resp = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+    method: 'POST', body: ab
+  });
+  const data = await resp.json();
+  if (data.path) {
+    document.getElementById('infer_img').value = data.path;
+    document.getElementById('dropZone').innerHTML =
+      `<div class="icon">&#9989;</div><div>已上传: ${file.name}</div>`;
+  }
+}
+
+// 拖拽
+const dz = document.getElementById('dropZone');
+if (dz) {
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', async e => {
+    e.preventDefault(); dz.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const ab = await file.arrayBuffer();
+    const resp = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+      method: 'POST', body: ab
+    });
+    const data = await resp.json();
+    if (data.path) {
+      document.getElementById('infer_img').value = data.path;
+      dz.innerHTML = `<div class="icon">&#9989;</div><div>已上传: ${file.name}</div>`;
+    }
+  });
+}
+
+function buildParams() {
+  return {
+    config:           document.getElementById('infer_config').value,
+    weights:          document.getElementById('infer_weights').value,
+    extra_opts:       document.getElementById('infer_extra_opts').value,
+    infer_img:        document.getElementById('infer_img').value,
+    infer_dir:        document.getElementById('infer_dir').value,
+    output_dir:       document.getElementById('infer_output_dir').value,
+    draw_threshold:   document.getElementById('infer_threshold').value,
+    slim_config:      document.getElementById('infer_slim_config').value,
+    save_results:     document.getElementById('infer_save_results').checked,
+    visualize:        document.getElementById('infer_visualize').checked ? 'true' : 'false',
+    use_vdl:          document.getElementById('infer_use_vdl').checked,
+    vdl_log_dir:      document.getElementById('infer_vdl_log_dir').value,
+    slice_infer:      document.getElementById('infer_slice_infer').checked,
+    slice_size:       document.getElementById('infer_slice_size').value,
+    overlap_ratio:    document.getElementById('infer_overlap_ratio').value,
+    combine_method:   document.getElementById('infer_combine_method').value,
+    match_threshold:  document.getElementById('infer_match_threshold').value,
+    match_metric:     document.getElementById('infer_match_metric').value,
+  };
+}
+
+function generateCommand() {
+  const p = buildParams();
+  let cmd = `python tools/infer.py \\\n    -c ${p.config}`;
+  let opts = [];
+  if (p.weights) opts.push(`weights=${p.weights}`);
+  if (p.extra_opts) opts.push(p.extra_opts);
+  if (opts.length) cmd += ` \\\n    -o ${opts.join(' ')}`;
+  if (p.infer_img) cmd += ` \\\n    --infer_img=${p.infer_img}`;
+  else if (p.infer_dir) cmd += ` \\\n    --infer_dir=${p.infer_dir}`;
+  if (p.output_dir) cmd += ` \\\n    --output_dir=${p.output_dir}`;
+  cmd += ` \\\n    --draw_threshold=${p.draw_threshold}`;
+  if (p.slim_config) cmd += ` \\\n    --slim_config=${p.slim_config}`;
+  if (p.save_results) cmd += ` \\\n    --save_results=True`;
+  if (p.visualize === 'false') cmd += ` \\\n    --visualize=False`;
+  if (p.use_vdl) cmd += ` \\\n    --use_vdl=True`;
+  if (p.vdl_log_dir) cmd += ` \\\n    --vdl_log_dir=${p.vdl_log_dir}`;
+  if (p.slice_infer) {
+    cmd += ` \\\n    --slice_infer`;
+    if (p.slice_size) cmd += ` \\\n    --slice_size ${p.slice_size}`;
+    if (p.overlap_ratio) cmd += ` \\\n    --overlap_ratio ${p.overlap_ratio}`;
+    if (p.combine_method) cmd += ` \\\n    --combine_method=${p.combine_method}`;
+    if (p.match_threshold) cmd += ` \\\n    --match_threshold=${p.match_threshold}`;
+    if (p.match_metric) cmd += ` \\\n    --match_metric=${p.match_metric}`;
+  }
+
+  const logEl = document.getElementById('inferLog');
+  logEl.innerHTML = `<span class="cmd-line">生成的命令:\n\n${escapeHtml(cmd)}</span>\n\n可复制到终端执行。`;
+}
+
+async function runInference() {
+  const p = buildParams();
+  if (!p.config) return alert('请选择配置文件 (-c)');
+  if (!p.weights) return alert('请选择模型权重');
+  if (!p.infer_img && !p.infer_dir) return alert('请指定推理图片或目录');
+
+  const btn = document.getElementById('runInferBtn');
+  btn.disabled = true;
+  btn.textContent = '推理中...';
+
+  const dot = document.getElementById('inferStatusDot');
+  dot.className = 'status-dot running';
+  document.getElementById('inferStatusText').textContent = '推理中...';
+  document.getElementById('inferLog').textContent = '启动推理...\n';
+
+  const startTime = Date.now();
+  const timerEl = document.getElementById('inferTimer');
+  const timerInterval = setInterval(() => {
+    timerEl.textContent = ((Date.now()-startTime)/1000).toFixed(1) + 's';
+  }, 200);
+
+  // 立即清空上次结果图，避免再次推理时仍显示旧图
+  const wrap = document.getElementById('inferImageWrap');
+  wrap.innerHTML = '<div style="text-align:center;color:var(--text3);"><div style="font-size:48px;margin-bottom:12px;">&#128260;</div><div>推理中...</div></div>';
+
+  try {
+    const resp = await fetch('/api/infer/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(p)
+    });
+    const data = await resp.json();
+    if (data.error) {
+      alert(data.error);
+      btn.disabled = false; btn.textContent = '▶ 开始推理';
+      clearInterval(timerInterval);
+      return;
+    }
+
+    // 轮询状态
+    pollInferStatus(btn, dot, timerInterval);
+  } catch(e) {
+    alert('请求失败: ' + e.message);
+    btn.disabled = false; btn.textContent = '▶ 开始推理';
+    clearInterval(timerInterval);
+  }
+}
+
+function pollInferStatus(btn, dot, timerInterval) {
+  if (inferPollTimer) clearInterval(inferPollTimer);
+  inferPollTimer = setInterval(async () => {
+    try {
+      const st = await api('/api/infer/status');
+      const logEl = document.getElementById('inferLog');
+
+      // 更新日志（高亮处理）
+      let logHtml = '';
+      st.log.split('\n').forEach(line => {
+        if (line.startsWith('CMD:')) logHtml += `<span class="cmd-line">${escapeHtml(line)}</span>\n`;
+        else if (line.includes('Error') || line.includes('ERROR') || line.includes('Traceback'))
+          logHtml += `<span class="error-line">${escapeHtml(line)}</span>\n`;
+        else logHtml += escapeHtml(line) + '\n';
+      });
+      logEl.innerHTML = logHtml;
+      logEl.scrollTop = logEl.scrollHeight;
+
+      if (!st.running) {
+        clearInterval(inferPollTimer);
+        clearInterval(timerInterval);
+        inferPollTimer = null;
+        btn.disabled = false;
+        btn.textContent = '▶ 开始推理';
+
+        if (st.exit_code === 0) {
+          dot.className = 'status-dot success';
+          document.getElementById('inferStatusText').textContent = '推理完成';
+          // 显示结果图片：先清空再设置新 src，并用唯一参数强制浏览器重新加载
+          if (st.result_image) {
+            const wrapEl = document.getElementById('inferImageWrap');
+            wrapEl.innerHTML = '';
+            const img = document.createElement('img');
+            img.alt = '推理结果';
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.style.objectFit = 'contain';
+            img.style.borderRadius = '4px';
+            img.style.boxShadow = '0 4px 24px rgba(0,0,0,.5)';
+            img.src = '/api/infer/result_image?t=' + Date.now() + '&r=' + Math.random();
+            wrapEl.appendChild(img);
+          }
+        } else {
+          dot.className = 'status-dot error';
+          document.getElementById('inferStatusText').textContent = `推理失败 (exit ${st.exit_code})`;
+        }
+      }
+    } catch(e) {
+      console.error('Poll error:', e);
+    }
+  }, 1000);
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// 键盘快捷键
+document.addEventListener('keydown', e => {
+  if (e.target.tagName==='INPUT' || e.target.tagName==='SELECT' || e.target.tagName==='TEXTAREA') return;
+  switch(e.key) {
+    case 'ArrowLeft': case 'a': case 'A': navigate(-1); e.preventDefault(); break;
+    case 'ArrowRight': case 'd': case 'D': navigate(1); e.preventDefault(); break;
+    case '-': case '_': zoom(-0.1); e.preventDefault(); break;
+    case '=': case '+': zoom(0.1); e.preventDefault(); break;
+    case 'f': case 'F': zoomFit(); e.preventDefault(); break;
+  }
+});
+
+init();
+</script>
+</body>
+</html>
