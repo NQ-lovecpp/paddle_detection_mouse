@@ -1,0 +1,11 @@
+# 临时文件
+*.log
+*.tmp
+*~
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+
+# 但是保留模型文件（不忽略.onnx）
