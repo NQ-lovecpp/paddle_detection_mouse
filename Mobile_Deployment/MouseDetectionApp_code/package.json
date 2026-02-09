@@ -1,0 +1,25 @@
+{
+  "name": "MouseDetectionApp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "react-native start",
+    "ios": "react-native run-ios",
+    "android": "react-native run-android",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "jpeg-js": "^0.4.4",
+    "onnxruntime-react-native": "^1.17.3",
+    "react": "18.2.0",
+    "react-native": "0.73.6",
+    "react-native-fs": "^2.20.0",
+    "react-native-image-picker": "^7.1.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.3.3"
+  }
+}
