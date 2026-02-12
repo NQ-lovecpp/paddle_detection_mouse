@@ -133,6 +133,34 @@ paddle2onnx \
 
 ---
 
+### 1.4.1 极致量化（ONNX PTQ + QDQ）
+
+**目标**: 在不改动网络结构的前提下，使用ONNX Runtime静态量化进一步压缩推理成本。  
+**适用场景**: 现有FP32/INT8模型推理仍然过慢，移动端需要更高FPS。
+
+**安装依赖**:
+```bash
+pip install onnx onnxruntime onnxruntime-tools pillow
+```
+
+**执行量化**（基于校准图片集）:
+```bash
+python /hy-tmp/paddle_detection_mouse/Mobile_Deployment/tools/onnx_quantize.py \
+  --input /hy-tmp/paddle_detection_mouse/Mobile_Deployment/models/yolov3_mouse_fp32.onnx \
+  --output /hy-tmp/paddle_detection_mouse/Mobile_Deployment/models/yolov3_mouse_int8_qdq.onnx \
+  --calib_dir /path/to/calibration/images \
+  --num_samples 300 \
+  --per_channel \
+  --optimize
+```
+
+**说明**:
+- 量化脚本会生成 `yolov3_mouse_int8_qdq.onnx`（QDQ格式，移动端兼容性更好）
+- `--calib_dir` 建议使用真实场景图片（200~1000张）
+- `--per_channel` 和 `--optimize` 推荐开启
+
+---
+
 ### 1.5 验证ONNX模型
 
 ```bash

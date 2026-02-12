@@ -1,0 +1,91 @@
+Warning: Unable to use numba in PP-Tracking, please install numba, for example(python3.7): `pip install numba==0.56.4`
+Warning: Unable to use numba in PP-Tracking, please install numba, for example(python3.7): `pip install numba==0.56.4`
+======================= Modified FLAGS detected =======================
+FLAGS(name='FLAGS_selected_gpus', current_value='0', default_value='')
+=======================================================================
+I0211 01:40:36.645889 2211044 tcp_utils.cc:181] The server starts to listen on IP_ANY:57184
+I0211 01:40:36.646098 2211044 tcp_utils.cc:130] Successfully connected to 172.17.0.2:57184
+W0211 01:40:44.707362 2211044 gpu_resources.cc:119] Please NOTE: device: 0, GPU Compute Capability: 7.5, Driver API Version: 12.2, Runtime API Version: 11.6
+W0211 01:40:44.715487 2211044 gpu_resources.cc:149] device: 0, cuDNN Version: 8.4.
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls0.bias is unmatched with the shape [2] in model head.head_cls0.bias. And the weight head.head_cls0.bias will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls0.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls0.weight. And the weight head.head_cls0.weight will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls1.bias is unmatched with the shape [2] in model head.head_cls1.bias. And the weight head.head_cls1.bias will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls1.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls1.weight. And the weight head.head_cls1.weight will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls2.bias is unmatched with the shape [2] in model head.head_cls2.bias. And the weight head.head_cls2.bias will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls2.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls2.weight. And the weight head.head_cls2.weight will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls3.bias is unmatched with the shape [2] in model head.head_cls3.bias. And the weight head.head_cls3.bias will not be loaded
+[02/11 01:40:48] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls3.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls3.weight. And the weight head.head_cls3.weight will not be loaded
+[02/11 01:40:49] ppdet.utils.checkpoint INFO: Finish loading model weights: pretrained_models/picodet_s_320_coco_lcnet.pdparams
+[02/11 01:40:55] ppdet.engine INFO: Epoch: [0] [  0/540] learning_rate: 0.002000 loss_vfl: 2.304678 loss_bbox: 0.535257 loss_dfl: 0.527155 loss: 3.367090 eta: 0:55:20 batch_cost: 6.1483 data_cost: 0.0007 ips: 1.3012 images/s
+[02/11 01:41:00] ppdet.engine INFO: Epoch: [0] [ 20/540] learning_rate: 0.003200 loss_vfl: 1.661500 loss_bbox: 0.534177 loss_dfl: 0.518658 loss: 2.497105 eta: 0:04:12 batch_cost: 0.2033 data_cost: 0.0049 ips: 39.3433 images/s
+[02/11 01:41:06] ppdet.engine INFO: Epoch: [0] [ 40/540] learning_rate: 0.004400 loss_vfl: 1.168990 loss_bbox: 0.423892 loss_dfl: 0.463303 loss: 2.026674 eta: 0:03:13 batch_cost: 0.2824 data_cost: 0.0789 ips: 28.3270 images/s
+[02/11 01:41:14] ppdet.engine INFO: Epoch: [0] [ 60/540] learning_rate: 0.005600 loss_vfl: 1.052653 loss_bbox: 0.358615 loss_dfl: 0.391991 loss: 1.906037 eta: 0:03:04 batch_cost: 0.3765 data_cost: 0.0761 ips: 21.2502 images/s
+[02/11 01:41:20] ppdet.engine INFO: Epoch: [0] [ 80/540] learning_rate: 0.006800 loss_vfl: 1.153606 loss_bbox: 0.423171 loss_dfl: 0.437983 loss: 2.044957 eta: 0:02:42 batch_cost: 0.2576 data_cost: 0.0003 ips: 31.0511 images/s
+[02/11 01:41:26] ppdet.engine INFO: Epoch: [0] [100/540] learning_rate: 0.008000 loss_vfl: 1.028494 loss_bbox: 0.394774 loss_dfl: 0.406016 loss: 1.835413 eta: 0:02:27 batch_cost: 0.2625 data_cost: 0.0776 ips: 30.4755 images/s
+[02/11 01:41:32] ppdet.engine INFO: Epoch: [0] [120/540] learning_rate: 0.009200 loss_vfl: 1.072770 loss_bbox: 0.338701 loss_dfl: 0.404273 loss: 1.784795 eta: 0:02:15 batch_cost: 0.2576 data_cost: 0.0748 ips: 31.0555 images/s
+[02/11 01:41:39] ppdet.engine INFO: Epoch: [0] [140/540] learning_rate: 0.010400 loss_vfl: 1.109635 loss_bbox: 0.419767 loss_dfl: 0.412511 loss: 1.971403 eta: 0:02:06 batch_cost: 0.2786 data_cost: 0.1273 ips: 28.7134 images/s
+[02/11 01:41:44] ppdet.engine INFO: Epoch: [0] [160/540] learning_rate: 0.011600 loss_vfl: 1.053613 loss_bbox: 0.386745 loss_dfl: 0.394741 loss: 1.872409 eta: 0:01:56 batch_cost: 0.2467 data_cost: 0.0914 ips: 32.4326 images/s
+[02/11 01:41:50] ppdet.engine INFO: Epoch: [0] [180/540] learning_rate: 0.012800 loss_vfl: 0.952644 loss_bbox: 0.420212 loss_dfl: 0.393575 loss: 1.785713 eta: 0:01:48 batch_cost: 0.2620 data_cost: 0.0040 ips: 30.5386 images/s
+[02/11 01:41:57] ppdet.engine INFO: Epoch: [0] [200/540] learning_rate: 0.014000 loss_vfl: 1.080689 loss_bbox: 0.466835 loss_dfl: 0.434931 loss: 2.062776 eta: 0:01:41 batch_cost: 0.2786 data_cost: 0.0134 ips: 28.7136 images/s
+[02/11 01:42:03] ppdet.engine INFO: Epoch: [0] [220/540] learning_rate: 0.015200 loss_vfl: 1.142030 loss_bbox: 0.472514 loss_dfl: 0.425533 loss: 2.082127 eta: 0:01:34 batch_cost: 0.2605 data_cost: 0.0851 ips: 30.7054 images/s
+[02/11 01:42:09] ppdet.engine INFO: Epoch: [0] [240/540] learning_rate: 0.016400 loss_vfl: 1.044029 loss_bbox: 0.456208 loss_dfl: 0.413117 loss: 2.026132 eta: 0:01:27 batch_cost: 0.2558 data_cost: 0.0012 ips: 31.2739 images/s
+[02/11 01:42:16] ppdet.engine INFO: Epoch: [0] [260/540] learning_rate: 0.017600 loss_vfl: 1.074821 loss_bbox: 0.453878 loss_dfl: 0.436943 loss: 2.024920 eta: 0:01:22 batch_cost: 0.3036 data_cost: 0.0219 ips: 26.3543 images/s
+[02/11 01:42:22] ppdet.engine INFO: Epoch: [0] [280/540] learning_rate: 0.018800 loss_vfl: 1.029964 loss_bbox: 0.508374 loss_dfl: 0.450751 loss: 2.009258 eta: 0:01:15 batch_cost: 0.2699 data_cost: 0.0006 ips: 29.6375 images/s
+[02/11 01:42:28] ppdet.engine INFO: Epoch: [0] [300/540] learning_rate: 0.020000 loss_vfl: 1.065895 loss_bbox: 0.478594 loss_dfl: 0.445853 loss: 2.028951 eta: 0:01:09 batch_cost: 0.2599 data_cost: 0.0006 ips: 30.7825 images/s
+[02/11 01:42:34] ppdet.engine INFO: Epoch: [0] [320/540] learning_rate: 0.020000 loss_vfl: 1.052888 loss_bbox: 0.473024 loss_dfl: 0.440381 loss: 1.963477 eta: 0:01:03 batch_cost: 0.2554 data_cost: 0.0107 ips: 31.3257 images/s
+[02/11 01:42:40] ppdet.engine INFO: Epoch: [0] [340/540] learning_rate: 0.020000 loss_vfl: 1.047886 loss_bbox: 0.433438 loss_dfl: 0.410761 loss: 1.823816 eta: 0:00:57 batch_cost: 0.2579 data_cost: 0.0004 ips: 31.0144 images/s
+[02/11 01:42:46] ppdet.engine INFO: Epoch: [0] [360/540] learning_rate: 0.020000 loss_vfl: 1.060472 loss_bbox: 0.426241 loss_dfl: 0.410625 loss: 1.867348 eta: 0:00:51 batch_cost: 0.2719 data_cost: 0.0977 ips: 29.4273 images/s
+[02/11 01:42:52] ppdet.engine INFO: Epoch: [0] [380/540] learning_rate: 0.020000 loss_vfl: 1.064455 loss_bbox: 0.500178 loss_dfl: 0.438350 loss: 1.963822 eta: 0:00:45 batch_cost: 0.2604 data_cost: 0.0734 ips: 30.7216 images/s
+[02/11 01:42:58] ppdet.engine INFO: Epoch: [0] [400/540] learning_rate: 0.020000 loss_vfl: 1.101589 loss_bbox: 0.472290 loss_dfl: 0.440328 loss: 2.005782 eta: 0:00:39 batch_cost: 0.2923 data_cost: 0.0506 ips: 27.3718 images/s
+[02/11 01:43:07] ppdet.engine INFO: Epoch: [0] [420/540] learning_rate: 0.020000 loss_vfl: 1.005426 loss_bbox: 0.409358 loss_dfl: 0.417901 loss: 1.855277 eta: 0:00:34 batch_cost: 0.3766 data_cost: 0.2095 ips: 21.2414 images/s
+[02/11 01:43:13] ppdet.engine INFO: Epoch: [0] [440/540] learning_rate: 0.020000 loss_vfl: 1.030826 loss_bbox: 0.420858 loss_dfl: 0.431147 loss: 1.932344 eta: 0:00:28 batch_cost: 0.2545 data_cost: 0.0781 ips: 31.4302 images/s
+[02/11 01:43:18] ppdet.engine INFO: Epoch: [0] [460/540] learning_rate: 0.020000 loss_vfl: 1.011494 loss_bbox: 0.444130 loss_dfl: 0.413807 loss: 1.827250 eta: 0:00:22 batch_cost: 0.2568 data_cost: 0.0486 ips: 31.1475 images/s
+[02/11 01:43:24] ppdet.engine INFO: Epoch: [0] [480/540] learning_rate: 0.020000 loss_vfl: 1.092935 loss_bbox: 0.455447 loss_dfl: 0.460514 loss: 1.997574 eta: 0:00:17 batch_cost: 0.2283 data_cost: 0.0247 ips: 35.0414 images/s
+[02/11 01:43:32] ppdet.engine INFO: Epoch: [0] [500/540] learning_rate: 0.020000 loss_vfl: 0.987068 loss_bbox: 0.427006 loss_dfl: 0.420021 loss: 1.796001 eta: 0:00:11 batch_cost: 0.3568 data_cost: 0.0004 ips: 22.4186 images/s
+[02/11 01:43:38] ppdet.engine INFO: Epoch: [0] [520/540] learning_rate: 0.020000 loss_vfl: 0.967786 loss_bbox: 0.452970 loss_dfl: 0.463601 loss: 1.906877 eta: 0:00:05 batch_cost: 0.2403 data_cost: 0.0008 ips: 33.2892 images/s
+[02/11 01:43:47] ppdet.utils.checkpoint INFO: Save checkpoint: output/picodet_s_320_voc_mouse/picodet_s_320_voc_mouse
+[02/11 01:43:48] ppdet.engine INFO: Eval iter: 0
+[02/11 01:44:01] ppdet.engine INFO: Eval iter: 100
+[02/11 01:44:10] ppdet.engine INFO: Eval iter: 200
+[02/11 01:44:17] ppdet.metrics.metrics INFO: Accumulating evaluatation results...
+[02/11 01:44:18] ppdet.metrics.metrics INFO: mAP(0.50, integral) = 80.81%
+[02/11 01:44:18] ppdet.engine INFO: Total sample number: 2163, average FPS: 73.86947483613565
+[02/11 01:44:18] ppdet.engine INFO: Best test bbox ap is 0.808.
+[02/11 01:44:18] ppdet.utils.checkpoint INFO: Save checkpoint: output/picodet_s_320_voc_mouse/picodet_s_320_voc_mouse
+I0211 01:44:20.377521 2211093 tcp_store.cc:273] receive shutdown event and so quit from MasterDaemon run loop
+Warning: Unable to use numba in PP-Tracking, please install numba, for example(python3.7): `pip install numba==0.56.4`
+Warning: Unable to use numba in PP-Tracking, please install numba, for example(python3.7): `pip install numba==0.56.4`
+======================= Modified FLAGS detected =======================
+FLAGS(name='FLAGS_selected_gpus', current_value='0', default_value='')
+=======================================================================
+I0211 13:09:15.455188 2293657 tcp_utils.cc:181] The server starts to listen on IP_ANY:41758
+I0211 13:09:15.455376 2293657 tcp_utils.cc:130] Successfully connected to 172.17.0.2:41758
+W0211 13:09:21.484254 2293657 gpu_resources.cc:119] Please NOTE: device: 0, GPU Compute Capability: 7.5, Driver API Version: 12.2, Runtime API Version: 11.6
+W0211 13:09:21.492556 2293657 gpu_resources.cc:149] device: 0, cuDNN Version: 8.4.
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls0.bias is unmatched with the shape [2] in model head.head_cls0.bias. And the weight head.head_cls0.bias will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls0.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls0.weight. And the weight head.head_cls0.weight will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls1.bias is unmatched with the shape [2] in model head.head_cls1.bias. And the weight head.head_cls1.bias will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls1.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls1.weight. And the weight head.head_cls1.weight will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls2.bias is unmatched with the shape [2] in model head.head_cls2.bias. And the weight head.head_cls2.bias will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls2.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls2.weight. And the weight head.head_cls2.weight will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80] in pretrained weight head.head_cls3.bias is unmatched with the shape [2] in model head.head_cls3.bias. And the weight head.head_cls3.bias will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: The shape [80, 96, 1, 1] in pretrained weight head.head_cls3.weight is unmatched with the shape [2, 96, 1, 1] in model head.head_cls3.weight. And the weight head.head_cls3.weight will not be loaded
+[02/11 13:09:24] ppdet.utils.checkpoint INFO: Finish loading model weights: pretrained_models/picodet_s_320_coco_lcnet.pdparams
+
+
+--------------------------------------
+C++ Traceback (most recent call last):
+--------------------------------------
+0   conv2d_ad_func(paddle::Tensor const&, paddle::Tensor const&, std::vector<int, std::allocator<int> >, std::vector<int, std::allocator<int> >, std::string, std::vector<int, std::allocator<int> >, int, std::string)
+1   paddle::experimental::conv2d(paddle::Tensor const&, paddle::Tensor const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::string const&, std::vector<int, std::allocator<int> > const&, int, std::string const&)
+2   void phi::ConvCudnnKernel<float, phi::GPUContext>(phi::GPUContext const&, phi::DenseTensor const&, phi::DenseTensor const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::string const&, std::vector<int, std::allocator<int> > const&, int, std::string const&, phi::DenseTensor*)
+3   void phi::ConvCudnnKernelImplV7<float, phi::GPUContext>(phi::DenseTensor const*, phi::DenseTensor const*, phi::GPUContext const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, phi::backends::gpu::DataLayout, phi::backends::gpu::DataLayout, bool, bool, int, phi::DenseTensor*)
+4   std::_Function_handler<void (void*), phi::ConvRunner<float, (phi::ConvKind)1>::Apply(phi::GPUContext const&, phi::ConvArgsBase<cudnnContext*, cudnnDataType_t> const&, phi::SearchResult<cudnnConvolutionFwdAlgo_t> const&, float const*, float const*, float*, int, int, int, int, unsigned long, phi::DnnWorkspaceHandle*, bool)::{lambda(void*)#1}>::_M_invoke(std::_Any_data const&, void*&&)
+
+----------------------
+Error Message Summary:
+----------------------
+FatalError: `Termination signal` is detected by the operating system.
+  [TimeInfo: *** Aborted at 1770786567 (unix time) try "date -d @1770786567" if you are using GNU date ***]
+  [SignalInfo: *** SIGTERM (@0x22ff51) received by PID 2293657 (TID 0x14e431e5a4c0) from PID 2293585 ***]
+

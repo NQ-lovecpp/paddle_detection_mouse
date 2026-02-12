@@ -15,6 +15,10 @@ export class ModelService {
   async initialize(): Promise<void> {
     // Try multiple possible paths for the model file
     const possibleModelPaths = [
+      `${RNFS.MainBundlePath}/yolov3_mouse_int8_qdq.onnx`,
+      `${RNFS.MainBundlePath}/Resources/yolov3_mouse_int8_qdq.onnx`,
+      `${RNFS.MainBundlePath}/yolov3_mouse_int8.onnx`,
+      `${RNFS.MainBundlePath}/Resources/yolov3_mouse_int8.onnx`,
       `${RNFS.MainBundlePath}/yolov3_mouse_fp32.onnx`,
       `${RNFS.MainBundlePath}/Resources/yolov3_mouse_fp32.onnx`,
     ];
