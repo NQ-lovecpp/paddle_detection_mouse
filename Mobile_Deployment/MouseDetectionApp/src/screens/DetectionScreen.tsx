@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   LayoutChangeEvent,
   NativeModules,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,15 +16,16 @@ import {
 import { BoundingBoxOverlay } from '../components/BoundingBoxOverlay';
 import { DebugConsole, DebugLog } from '../components/DebugConsole';
 import { ThresholdSlider } from '../components/ThresholdSlider';
-import { ModelService } from '../services/ModelService';
-import { Detection, PreprocessResult } from '../types';
+import { Detection } from '../types';
 import RNFS from 'react-native-fs';
-import { Buffer } from 'buffer';
 
-const { ImagePreprocessor } = NativeModules;
+// Full native pipeline: image → ORT C API + CoreML → NMS → boxes
+// No 1.2 MB float data over the bridge
+const { MouseDetector } = NativeModules;
 
-const INFERENCE_INTERVAL_MS = 500;
 const MAX_DEBUG_LOGS = 200;
+// How many ms to wait between frames (0 = run as fast as possible)
+const INTER_FRAME_DELAY_MS = 0;
 
 // Remote log server URL - sends logs to Mac terminal for debugging
 // Use the Mac's local IP (same network as iPhone via USB)
@@ -41,15 +41,15 @@ function sendRemoteLog(message: string, type: string, time: string) {
 }
 
 export const DetectionScreen: React.FC = () => {
-  const modelService = useMemo(() => new ModelService(), []);
   const cameraRef = useRef<Camera>(null);
-  const inferringRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const loopActiveRef = useRef(false);
+  const logFrameCountRef = useRef(0);
 
   const [modelReady, setModelReady] = useState(false);
   const [status, setStatus] = useState('正在加载模型...');
   const [detections, setDetections] = useState<Detection[]>([]);
   const [allDetections, setAllDetections] = useState<Detection[]>([]);
+  const [imageDims, setImageDims] = useState({ width: 1, height: 1 });
   const [fps, setFps] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [threshold, setThreshold] = useState(0.5);
@@ -58,8 +58,6 @@ export const DetectionScreen: React.FC = () => {
 
   // Camera preview layout
   const [previewLayout, setPreviewLayout] = useState({ width: 0, height: 0 });
-  // Image dimensions from last inference
-  const [imageDims, setImageDims] = useState({ width: 1, height: 1 });
 
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
@@ -82,31 +80,42 @@ export const DetectionScreen: React.FC = () => {
     sendRemoteLog(message, type, time);
   }, []);
 
-  // Initialize model
+  // Initialize native model
   useEffect(() => {
     let mounted = true;
-    addLog('开始加载模型...');
-    modelService
-      .initialize()
-      .then(() => {
+    addLog('开始加载模型 (native MouseDetector)...');
+
+    // Locate model in app bundle
+    (async () => {
+      let modelPath: string | null = null;
+      const candidates = [
+        `${RNFS.MainBundlePath}/picodet_s_320_mouse_L1_nonms.onnx`,
+        `${RNFS.MainBundlePath}/Resources/picodet_s_320_mouse_L1_nonms.onnx`,
+      ];
+      for (const p of candidates) {
+        if (await RNFS.exists(p)) { modelPath = p; break; }
+      }
+      if (!modelPath) {
+        const msg = `Model not found in bundle (${RNFS.MainBundlePath})`;
+        if (mounted) { setStatus(`模型加载失败: ${msg}`); addLog(`❌ ${msg}`, 'error'); }
+        return;
+      }
+      addLog(`Model path: ${modelPath}`);
+      try {
+        await MouseDetector.initialize(modelPath);
         if (mounted) {
           setModelReady(true);
           setStatus('模型就绪 - 点击"开始检测"');
-          addLog('✅ 模型加载成功');
-          addLog(`配置: inputSize=${modelService.getConfig().inputSize}, threshold=${modelService.getConfig().confidenceThreshold}`);
+          addLog('✅ 原生模型加载成功 (CoreML EP)');
         }
-      })
-      .catch(error => {
-        if (mounted) {
-          const msg = String(error);
-          setStatus(`模型加载失败: ${msg}`);
-          addLog(`❌ 模型加载失败: ${msg}`, 'error');
-        }
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [modelService, addLog]);
+      } catch (err) {
+        const msg = String(err);
+        if (mounted) { setStatus(`模型加载失败: ${msg}`); addLog(`❌ ${msg}`, 'error'); }
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [addLog]);
 
   // Request camera permission
   useEffect(() => {
@@ -118,140 +127,107 @@ export const DetectionScreen: React.FC = () => {
     }
   }, [hasPermission, requestPermission, addLog]);
 
-  // Handle threshold change
+  // Handle threshold change — re-filter already-collected detections immediately
   const handleThresholdChange = useCallback(
     (val: number) => {
       setThreshold(val);
-      modelService.setConfidenceThreshold(val);
-      // Re-filter existing detections immediately
       const filtered = allDetections.filter(d => d.confidence >= val);
       setDetections(filtered);
       addLog(`阈值调整为 ${(val * 100).toFixed(0)}%, 当前显示 ${filtered.length}/${allDetections.length} 个检测`, 'info');
     },
-    [modelService, allDetections, addLog]
+    [allDetections, addLog]
   );
 
-  // Single inference cycle
+  // Single inference cycle — one native round-trip: snap → C++ ORT + CoreML → boxes
   const runInference = useCallback(async () => {
-    if (inferringRef.current || !cameraRef.current || !modelService.isReady()) {
-      return;
-    }
+    if (!cameraRef.current || !modelReady) { return; }
 
-    inferringRef.current = true;
     const startTime = Date.now();
 
     try {
-      // Use takeSnapshot for faster capture from video pipeline
-      const photo = await cameraRef.current.takeSnapshot({
-        quality: 50, // Slightly higher quality for better detection, still fast
-      });
-
+      const photo = await cameraRef.current.takeSnapshot({ quality: 50 });
       const snapTime = Date.now() - startTime;
-
       const filePath = photo.path;
 
-      // === Native preprocessing (Swift/Accelerate) ===
-      // This replaces: RNFS.readFile + jpeg-js decode + JS resize/normalize
-      // All done natively: JPEG decode → Resize 608×608 → Normalize → CHW
-      const nativeResult = await ImagePreprocessor.preprocess(filePath);
-      const preprocessTime = Date.now() - startTime;
-
-      // Decode base64 Float32 data from native module
-      const floatBuffer = Buffer.from(nativeResult.data, 'base64');
-      const imageData = new Float32Array(
-        floatBuffer.buffer,
-        floatBuffer.byteOffset,
-        floatBuffer.byteLength / 4
-      );
-
-      const preprocess: PreprocessResult = {
-        imageData,
-        originalWidth: nativeResult.originalWidth,
-        originalHeight: nativeResult.originalHeight,
-        scaleX: nativeResult.scaleX,
-        scaleY: nativeResult.scaleY,
-      };
-
-      setImageDims({
-        width: preprocess.originalWidth,
-        height: preprocess.originalHeight,
-      });
-
-      // Run detection (returns all detections + debug info)
-      const { all: results, debugInfo } = await modelService.detect(preprocess);
-      const inferTime = Date.now() - startTime;
-
-      // Store all raw detections and filter by threshold
-      setAllDetections(results);
-      const filtered = results.filter(d => d.confidence >= threshold);
-      setDetections(filtered);
-
+      // Single native call: resize + normalize + ORT inference + NMS — all in C++/Swift
+      // Only the detection boxes (tiny JSON) cross the RN bridge
+      const nativeResult = await MouseDetector.detect(filePath, threshold);
       const elapsed = Date.now() - startTime;
+
+      const rawBoxes: Array<{
+        classId: number; className: string; confidence: number;
+        x1: number; y1: number; x2: number; y2: number;
+      }> = nativeResult.detections;
+
+      const results: Detection[] = rawBoxes.map(b => ({
+        classId:    b.classId,
+        className:  b.className,
+        confidence: b.confidence,
+        bbox: { x1: b.x1, y1: b.y1, x2: b.x2, y2: b.y2 },
+      }));
+
+      setImageDims({ width: nativeResult.originalWidth, height: nativeResult.originalHeight });
+      setAllDetections(results);
+      setDetections(results); // threshold already applied inside native module
       setFps(Math.round(1000 / elapsed));
-      setStatus(`检测中 | ${filtered.length}/${results.length} 个目标 | ${elapsed}ms`);
+      setStatus(`检测中 | ${results.length} 个目标 | ${elapsed}ms`);
 
-      // Debug log with timing breakdown
-      addLog(
-        `snap=${snapTime}ms native_pre=${preprocessTime - snapTime}ms(${nativeResult.timings}) infer=${inferTime - preprocessTime}ms total=${elapsed}ms`,
-        'info'
-      );
-
-      // Log model debug info (tensor shapes, raw output)
-      addLog(debugInfo, 'info');
-
-      // Log each detection with bbox details
-      if (results.length > 0) {
-        results.forEach((det, i) => {
-          const aboveThresh = det.confidence >= threshold ? '✅' : '⬇️';
-          addLog(
-            `  ${aboveThresh} [${i}] ${det.className} conf=${(det.confidence * 100).toFixed(1)}% bbox=(${det.bbox.x1.toFixed(1)}, ${det.bbox.y1.toFixed(1)}, ${det.bbox.x2.toFixed(1)}, ${det.bbox.y2.toFixed(1)}) size=${(det.bbox.x2 - det.bbox.x1).toFixed(0)}x${(det.bbox.y2 - det.bbox.y1).toFixed(0)}`,
-            'detection'
-          );
-        });
-      } else {
-        addLog('  无检测结果 (count=0 或所有 classId<0)', 'warn');
+      // Throttle remote logs every 5 frames
+      logFrameCountRef.current += 1;
+      if (logFrameCountRef.current % 5 === 1) {
+        addLog(
+          `snap=${snapTime}ms ${nativeResult.timings} js=${elapsed - snapTime - parseInt(nativeResult.timings.match(/total=(\d+)/)?.[1] ?? '0', 10)}ms total=${elapsed}ms`,
+          'info'
+        );
+        if (results.length > 0) {
+          results.forEach((det, i) => {
+            addLog(
+              `  ✅ [${i}] ${det.className} conf=${(det.confidence * 100).toFixed(1)}% bbox=(${det.bbox.x1.toFixed(0)},${det.bbox.y1.toFixed(0)},${det.bbox.x2.toFixed(0)},${det.bbox.y2.toFixed(0)})`,
+              'detection'
+            );
+          });
+        } else {
+          addLog('  无检测结果', 'warn');
+        }
       }
 
-      // Clean up temp file
-      try {
-        await RNFS.unlink(filePath);
-      } catch (_) {}
+      try { await RNFS.unlink(filePath); } catch (_) {}
     } catch (error) {
-      const msg = String(error);
-      addLog(`推理错误: ${msg}`, 'error');
+      addLog(`推理错误: ${String(error)}`, 'error');
       console.error('Inference error:', error);
-    } finally {
-      inferringRef.current = false;
     }
-  }, [modelService, addLog, threshold]);
+  }, [modelReady, addLog, threshold]);
 
-  // Start/stop continuous detection
   const toggleDetection = useCallback(() => {
     if (isRunning) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      loopActiveRef.current = false;
       setIsRunning(false);
       setStatus('已暂停');
       setDetections([]);
       setAllDetections([]);
       addLog('⏹ 检测已停止');
     } else {
+      loopActiveRef.current = true;
+      logFrameCountRef.current = 0;
       setIsRunning(true);
       setStatus('检测中...');
-      addLog('▶ 开始持续检测, 间隔=' + INFERENCE_INTERVAL_MS + 'ms');
-      runInference();
-      timerRef.current = setInterval(runInference, INFERENCE_INTERVAL_MS);
+      addLog('▶ 开始持续检测 (全原生推理，无固定间隔)');
+
+      (async () => {
+        while (loopActiveRef.current) {
+          await runInference();
+          if (INTER_FRAME_DELAY_MS > 0) {
+            await new Promise(r => setTimeout(r, INTER_FRAME_DELAY_MS));
+          }
+        }
+      })();
     }
   }, [isRunning, runInference, addLog]);
 
-  // Cleanup on unmount
+  // Stop loop on unmount
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      loopActiveRef.current = false;
     };
   }, []);
 
