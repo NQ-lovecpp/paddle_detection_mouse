@@ -71,6 +71,7 @@ PaddleDetection-release-2.6/vdl_dir/
 *.pdiparams
 *.pdiparams.info
 *.onnx
+!Mobile_Deployment/models/*.onnx
 *.pb
 *.h5
 *.pth
