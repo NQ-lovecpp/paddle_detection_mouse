@@ -3,8 +3,8 @@ import UIKit
 import Accelerate
 import React
 
-/// Native image preprocessor for PaddleDetection YOLOv3 model.
-/// Performs JPEG decode → Resize (608×608) → Normalize → CHW permute
+/// Native image preprocessor for PaddleDetection PicoDet-S model.
+/// Performs JPEG decode → Resize (320×320) → Normalize → CHW permute
 /// entirely in native code using Accelerate framework for maximum speed.
 @objc(ImagePreprocessor)
 class ImagePreprocessor: NSObject {
@@ -12,7 +12,7 @@ class ImagePreprocessor: NSObject {
   // PaddleDetection normalization constants (ImageNet)
   private static let mean: [Float] = [0.485, 0.456, 0.406]
   private static let std: [Float]  = [0.229, 0.224, 0.225]
-  private static let inputSize: Int = 608
+  private static let inputSize: Int = 320
 
   /// Main entry point called from React Native.
   /// Takes a JPEG file path, returns preprocessed CHW float array + metadata.
@@ -52,7 +52,7 @@ class ImagePreprocessor: NSObject {
 
       let decodeTime = CFAbsoluteTimeGetCurrent()
 
-      // 2. Resize to 608×608 using Core Graphics (bilinear interpolation)
+      // 2. Resize to 320×320 using Core Graphics (bilinear interpolation)
       let size = Self.inputSize
       guard let resizedPixels = Self.resizeImage(uiImage, toWidth: size, toHeight: size) else {
         reject("E_RESIZE", "Failed to resize image", nil)
