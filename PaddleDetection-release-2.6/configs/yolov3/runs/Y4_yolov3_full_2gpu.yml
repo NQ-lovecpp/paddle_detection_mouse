@@ -1,0 +1,23 @@
+# Y4: YOLOv3-MobileNetV1，全量数据，双卡
+# 目的：全量数据 + 双卡，追求最高精度上限
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=8/卡 = 16 total，linear scale: lr = 0.01 × (16/64) = 0.0025
+# milestones 按 60%/80% × 80 epoch = [48, 64]
+_BASE_: ['../yolov3_my_dog_mouse_voc.yml']
+
+save_dir: output/Y4_yolov3_full_2gpu
+epoch: 80
+snapshot_epoch: 5
+worker_num: 6
+
+LearningRate:
+  base_lr: 0.0025
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 48
+    - 64
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 1500

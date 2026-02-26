@@ -1,0 +1,24 @@
+# L3: PicoDet-S 双卡大 Batch Size 探索
+# 目的：探索更大 batch size 对精度/收敛速度的影响
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=48/卡 = 96 total，linear scale: lr = 0.16 × (96/64) = 0.24
+# 注：T4 15GB 显存，bs=48 + 320 分辨率可容纳
+_BASE_: ['../picodet_s_320_voc_mouse.yml']
+
+save_dir: output/L3_picodet_bs96
+epoch: 300
+snapshot_epoch: 10
+worker_num: 8
+use_shared_memory: True
+
+TrainReader:
+  batch_size: 48
+
+LearningRate:
+  base_lr: 0.24
+  schedulers:
+  - name: CosineDecay
+    max_epochs: 300
+  - name: LinearWarmup
+    start_factor: 0.1
+    steps: 300

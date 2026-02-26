@@ -1,0 +1,24 @@
+# L4: PicoDet-S 双卡加长训练
+# 目的：探索更多 epoch 是否带来精度增益
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=32/卡 = 64 total，lr=0.16（同 L2）
+# epoch=600，CosineDecay.max_epochs 同步调整为 600
+_BASE_: ['../picodet_s_320_voc_mouse.yml']
+
+save_dir: output/L4_picodet_600e
+epoch: 600
+snapshot_epoch: 20
+worker_num: 8
+use_shared_memory: True
+
+TrainReader:
+  batch_size: 32
+
+LearningRate:
+  base_lr: 0.16
+  schedulers:
+  - name: CosineDecay
+    max_epochs: 600
+  - name: LinearWarmup
+    start_factor: 0.1
+    steps: 300

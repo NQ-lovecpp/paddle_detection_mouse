@@ -1,0 +1,23 @@
+# L2: PicoDet-S 双卡标准配置（官方推荐）
+# 目的：双卡加速，达到官方推荐设置
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=32/卡 = 64 total，lr=0.16（官方 2-GPU 推荐值）
+_BASE_: ['../picodet_s_320_voc_mouse.yml']
+
+save_dir: output/L2_picodet_2gpu
+epoch: 300
+snapshot_epoch: 10
+worker_num: 8
+use_shared_memory: True
+
+TrainReader:
+  batch_size: 32
+
+LearningRate:
+  base_lr: 0.16
+  schedulers:
+  - name: CosineDecay
+    max_epochs: 300
+  - name: LinearWarmup
+    start_factor: 0.1
+    steps: 300

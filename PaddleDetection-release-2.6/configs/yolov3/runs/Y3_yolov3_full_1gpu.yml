@@ -1,0 +1,23 @@
+# Y3: YOLOv3-MobileNetV1，全量数据，单卡
+# 目的：全量数据单卡，对比 Y1 观察数据扩充对精度的提升（简历里的 +mAP）
+# 卡数：1    CUDA_VISIBLE_DEVICES=0
+# bs=8（默认），linear scale: lr = 0.01 × (8/64) = 0.00125
+# milestones 按 60%/80% × 80 epoch = [48, 64]
+_BASE_: ['../yolov3_my_dog_mouse_voc.yml']
+
+save_dir: output/Y3_yolov3_full_1gpu
+epoch: 80
+snapshot_epoch: 5
+worker_num: 6
+
+LearningRate:
+  base_lr: 0.00125
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 48
+    - 64
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 1500
