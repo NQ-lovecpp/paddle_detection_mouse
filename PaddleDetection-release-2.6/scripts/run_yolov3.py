@@ -148,20 +148,23 @@ def build_eval_cmd(run: dict) -> list:
 # 日志解析
 # ──────────────────────────────────────────────
 def extract_metrics(log_path: Path) -> tuple:
-    """从 train.log 中提取 best_mAP（%）和 eval FPS。"""
+    """从 train.log 或分布式 workerlog.0 中提取 best_mAP（%）和 eval FPS。"""
     best_ap = None
     fps = None
-    try:
-        with open(log_path, "r", errors="replace") as f:
-            for line in f:
-                m = re.search(r"Best test bbox ap is ([\d.]+)", line)
-                if m:
-                    best_ap = float(m.group(1))
-                m = re.search(r"average FPS: ([\d.]+)", line)
-                if m:
-                    fps = float(m.group(1))
-    except FileNotFoundError:
-        pass
+    workerlog = BASE_DIR / "log" / "workerlog.0"
+    candidates = [log_path, workerlog]
+    for candidate in candidates:
+        try:
+            with open(candidate, "r", errors="replace") as f:
+                for line in f:
+                    m = re.search(r"Best test bbox ap is ([\d]+\.[\d]+)", line)
+                    if m:
+                        best_ap = float(m.group(1))
+                    m = re.search(r"average FPS: ([\d.]+)", line)
+                    if m:
+                        fps = float(m.group(1))
+        except FileNotFoundError:
+            pass
     best_map = round(best_ap * 100, 2) if best_ap is not None else None
     return best_map, fps
 

@@ -71,7 +71,8 @@ PaddleDetection-release-2.6/vdl_dir/
 *.pdiparams
 *.pdiparams.info
 *.onnx
-!Mobile_Deployment/models/*.onnx
+# 只保留当前部署用的 PicoDet nonms 模型（4.5MB），YOLOv3 系列太大（93MB×3）不入库
+!Mobile_Deployment/models/picodet_s_320_mouse_L1_nonms.onnx
 *.pb
 *.h5
 *.pth
