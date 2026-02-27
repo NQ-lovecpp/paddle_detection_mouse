@@ -166,7 +166,8 @@ RCT_EXPORT_METHOD(detect:(NSString*)imagePath
       reject(@"E_CTX", @"CGBitmapContextCreate failed", nil);
       return;
     }
-    CGContextSetInterpolationQuality(ctx, kCGInterpolationMedium);
+    // kCGInterpolationLow is faster than Medium and sufficient for 320×320 detection.
+    CGContextSetInterpolationQuality(ctx, kCGInterpolationLow);
     CGContextDrawImage(ctx, CGRectMake(0, 0, sz, sz), uiImage.CGImage);
     CGContextRelease(ctx);
 
@@ -313,12 +314,14 @@ RCT_EXPORT_METHOD(detect:(NSString*)imagePath
     CFAbsoluteTime tEnd = CFAbsoluteTimeGetCurrent();
 
     NSString* timings = [NSString stringWithFormat:
-      @"resize=%.0fms norm=%.0fms infer=%.0fms nms=%.0fms total=%.0fms",
-      (tResize - t0)    * 1000.0,
+      @"resize=%.1fms norm=%.1fms infer=%.1fms nms=%.1fms total=%.1fms",
+      (tResize - t0)      * 1000.0,
       (tNorm   - tResize) * 1000.0,
       (tInfer  - tNorm)   * 1000.0,
       (tEnd    - tInfer)  * 1000.0,
       (tEnd    - t0)      * 1000.0];
+
+    NSLog(@"[MouseDetector] %@ dets=%lu", timings, (unsigned long)detections.count);
 
     resolve(@{
       @"detections":     detections,

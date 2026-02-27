@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Detection } from '../types';
 
@@ -12,7 +12,8 @@ interface Props {
   imageHeight: number;
 }
 
-export const BoundingBoxOverlay: React.FC<Props> = ({
+// Memoized: only re-renders when detections or layout actually changes
+export const BoundingBoxOverlay: React.FC<Props> = memo(({
   detections,
   previewWidth,
   previewHeight,
@@ -57,7 +58,7 @@ export const BoundingBoxOverlay: React.FC<Props> = ({
       })}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   box: {

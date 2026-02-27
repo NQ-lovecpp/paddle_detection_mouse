@@ -10,6 +10,8 @@ export interface DebugLog {
 interface Props {
   logs: DebugLog[];
   maxHeight?: number;
+  /** When true the console uses flex:1 to fill remaining space (landscape sidebar) */
+  flex?: boolean;
 }
 
 const LOG_COLORS: Record<DebugLog['type'], string> = {
@@ -19,16 +21,15 @@ const LOG_COLORS: Record<DebugLog['type'], string> = {
   detection: '#50fa7b',
 };
 
-export const DebugConsole: React.FC<Props> = ({ logs, maxHeight = 150 }) => {
+export const DebugConsole: React.FC<Props> = ({ logs, maxHeight = 150, flex = false }) => {
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    // Auto-scroll to bottom
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 50);
   }, [logs.length]);
 
   return (
-    <View style={[styles.container, { maxHeight }]}>
+    <View style={[styles.container, flex ? { flex: 1 } : { maxHeight }]}>
       <View style={styles.titleBar}>
         <Text style={styles.titleText}>📋 Debug Console</Text>
         <Text style={styles.countText}>{logs.length} logs</Text>
@@ -55,9 +56,9 @@ export const DebugConsole: React.FC<Props> = ({ logs, maxHeight = 150 }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(40, 42, 54, 0.92)',
+    backgroundColor: 'rgba(15, 15, 25, 0.96)',
     borderTopWidth: 1,
-    borderTopColor: '#444',
+    borderTopColor: '#1e1e2e',
   },
   titleBar: {
     flexDirection: 'row',
