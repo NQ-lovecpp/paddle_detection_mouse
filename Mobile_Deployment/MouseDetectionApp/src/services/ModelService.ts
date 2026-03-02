@@ -63,7 +63,11 @@ export class ModelService {
 
     try {
       console.log('Loading PicoDet model from:', modelPath);
-      this.session = await InferenceSession.create(modelPath);
+      // Enable CoreML Execution Provider for hardware-accelerated inference on iOS.
+      // Falls back to CPU automatically if CoreML is unavailable.
+      this.session = await InferenceSession.create(modelPath, {
+        executionProviders: ['coreml', 'cpu'],
+      });
       console.log('Model loaded. Inputs:', this.session.inputNames, 'Outputs:', this.session.outputNames);
 
       if (labelPath) {

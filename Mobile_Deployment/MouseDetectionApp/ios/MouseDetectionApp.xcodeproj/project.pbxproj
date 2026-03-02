@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-MouseDetectionApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-MouseDetectionApp.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		5968BC4C2F50B80B0010BF26 /* picodet_s_320_mouse_L1_nonms.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 5968BC4B2F50B80B0010BF26 /* picodet_s_320_mouse_L1_nonms.onnx */; };
 		6F1A6B0C8A1B3F1C00A1B2C3 /* yolov3_mouse_fp32.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 6F1A6B0B8A1B3F1C00A1B2C3 /* yolov3_mouse_fp32.onnx */; };
 		6F1A6B0E8A1B3F1C00A1B2C3 /* label_list.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6F1A6B0D8A1B3F1C00A1B2C3 /* label_list.txt */; };
 		6F1A6B108A1B3F1C00A1B2C3 /* infer_cfg.yml in Resources */ = {isa = PBXBuildFile; fileRef = 6F1A6B0F8A1B3F1C00A1B2C3 /* infer_cfg.yml */; };
@@ -16,6 +17,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A1B2C3D401234567AABBCCDD /* ImagePreprocessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D501234567AABBCCDD /* ImagePreprocessor.swift */; };
 		A1B2C3D601234567AABBCCDD /* ImagePreprocessor.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D701234567AABBCCDD /* ImagePreprocessor.m */; };
+		B2C3D4E401234567AABBCCEE /* MouseDetector.mm in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E501234567AABBCCEE /* MouseDetector.mm */; };
 		BB3C8A8DB2748B8E063448E2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -26,6 +28,7 @@
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = MouseDetectionApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-MouseDetectionApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MouseDetectionApp.debug.xcconfig"; path = "Target Support Files/Pods-MouseDetectionApp/Pods-MouseDetectionApp.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-MouseDetectionApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MouseDetectionApp.release.xcconfig"; path = "Target Support Files/Pods-MouseDetectionApp/Pods-MouseDetectionApp.release.xcconfig"; sourceTree = "<group>"; };
+		5968BC4B2F50B80B0010BF26 /* picodet_s_320_mouse_L1_nonms.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = picodet_s_320_mouse_L1_nonms.onnx; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-MouseDetectionApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MouseDetectionApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F1A6B0B8A1B3F1C00A1B2C3 /* yolov3_mouse_fp32.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = yolov3_mouse_fp32.onnx; sourceTree = "<group>"; };
 		6F1A6B0D8A1B3F1C00A1B2C3 /* label_list.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = label_list.txt; sourceTree = "<group>"; };
@@ -34,6 +37,7 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = MouseDetectionApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A1B2C3D501234567AABBCCDD /* ImagePreprocessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImagePreprocessor.swift; path = MouseDetectionApp/ImagePreprocessor.swift; sourceTree = "<group>"; };
 		A1B2C3D701234567AABBCCDD /* ImagePreprocessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = ImagePreprocessor.m; path = MouseDetectionApp/ImagePreprocessor.m; sourceTree = "<group>"; };
+		B2C3D4E501234567AABBCCEE /* MouseDetector.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = MouseDetector.mm; path = MouseDetectionApp/MouseDetector.mm; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -57,6 +61,7 @@
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				A1B2C3D501234567AABBCCDD /* ImagePreprocessor.swift */,
 				A1B2C3D701234567AABBCCDD /* ImagePreprocessor.m */,
+				B2C3D4E501234567AABBCCEE /* MouseDetector.mm */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -76,6 +81,7 @@
 		6F1A6B0A8A1B3F1C00A1B2C3 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				5968BC4B2F50B80B0010BF26 /* picodet_s_320_mouse_L1_nonms.onnx */,
 				6F1A6B0B8A1B3F1C00A1B2C3 /* yolov3_mouse_fp32.onnx */,
 				6F1A6B0D8A1B3F1C00A1B2C3 /* label_list.txt */,
 				6F1A6B0F8A1B3F1C00A1B2C3 /* infer_cfg.yml */,
@@ -185,6 +191,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				6F1A6B108A1B3F1C00A1B2C3 /* infer_cfg.yml in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				5968BC4C2F50B80B0010BF26 /* picodet_s_320_mouse_L1_nonms.onnx in Resources */,
 				6F1A6B0E8A1B3F1C00A1B2C3 /* label_list.txt in Resources */,
 				6F1A6B0C8A1B3F1C00A1B2C3 /* yolov3_mouse_fp32.onnx in Resources */,
 				BB3C8A8DB2748B8E063448E2 /* PrivacyInfo.xcprivacy in Resources */,
@@ -276,6 +283,7 @@
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				A1B2C3D401234567AABBCCDD /* ImagePreprocessor.swift in Sources */,
 				A1B2C3D601234567AABBCCDD /* ImagePreprocessor.m in Sources */,
+				B2C3D4E401234567AABBCCEE /* MouseDetector.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
