@@ -1,0 +1,32 @@
+# C3: YOLOv3 知识蒸馏（R34 Teacher → MobileNetV1 Student）——主训练配置
+# 使用方式：配合 --slim_config 参数
+#
+# 运行命令：
+#   python -m paddle.distributed.launch --gpus 0,1 tools/train.py \
+#     -c configs/yolov3/runs/C3_yolov3_distill.yml \
+#     --slim_config configs/slim/distill/yolov3_mobilenet_v1_coco_distill.yml \
+#     --eval
+#
+# 目的：MV1 基线 ~91.5% → 期望提升至 93%+
+# Teacher：YOLOv3-R34（COCO pretrained，在 slim_config 中指定）
+# Student：YOLOv3-MV1（mouse_other_voc，主 cfg 提供）
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=8/卡 = 16 total；epoch=80
+_BASE_: ['../yolov3_my_dog_mouse_voc.yml']
+
+save_dir: output/C3_yolov3_distill
+epoch: 80
+snapshot_epoch: 5
+worker_num: 8
+
+LearningRate:
+  base_lr: 0.0025
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 48
+    - 64
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 1500

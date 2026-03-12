@@ -1,0 +1,356 @@
+\section{结果与分析}
+\label{sec:results}
+
+\subsection{八组运行结果汇总}
+
+\begin{table}[H]
+\centering
+\caption{全部八组训练运行的完整结果。
+  $\uparrow$ 表示越高越好。}
+\label{tab:all_results}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccccr}
+\toprule
+\textbf{运行} & \textbf{模型} & \textbf{数据} & \textbf{GPU}
+             & \textbf{mAP@0.5 (\%)} & \textbf{峰值 Epoch}
+             & \textbf{FPS} & \textbf{时间 (h)} \\
+\midrule
+\rowcolor{picoBlue!10}
+L1 & PicoDet-S & 全量 & 1 & \textbf{94.30} & 70  & 80 & 14.9 \\
+L2 & PicoDet-S & 全量 & 2 & 93.80 & $\sim$80 & 77 &  6.7 \\
+L3 & PicoDet-S & 全量 & 2 & 94.10 & $\sim$60 & 71 &  6.6 \\
+L4 & PicoDet-S & 全量 & 2 & 93.50 & $\sim$140 & 74 & 13.3 \\
+\midrule
+Y1 & YOLOv3 & 1/3  & 1 & 44.40 & $\sim$65 & 36 &  6.7 \\
+Y2 & YOLOv3 & 1/3  & 2 & 44.10 & $\sim$65 & 36 &  3.5 \\
+\rowcolor{yoloOrange!10}
+Y3 & YOLOv3 & 全量 & 1 & 91.30 & $>$80 & 36 & 17.4 \\
+\rowcolor{yoloOrange!10}
+Y4 & YOLOv3 & 全量 & 2 & \textbf{91.54} & $>$80 & 35 &  8.8 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{PicoDet-S：学习曲线与过拟合}
+\label{sec:results:picodet_curve}
+
+\Cref{fig:l1_curve} 展示了 L1 运行的每 epoch mAP 曲线。
+曲线呈现三个阶段：
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{快速上升（epoch 0--70）：}
+    mAP 从 epoch~10 的 91.16\% 升至 epoch~70 的全局峰值 94.30\%，得益于 COCO 预训练迁移。
+  \item \textbf{平台期（epoch 70--100）：}
+    精度在峰值 $\pm$0.1\,pp 内波动。
+  \item \textbf{渐见过拟合（epoch 100--299）：}
+    mAP 持续下降至最终 checkpoint 的 91.42\%，较峰值下降 $-2.88$\,pp。
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=6.5cm,
+  xlabel={Epoch}, ylabel={mAP@0.5 (\%)},
+  xmin=0, xmax=310, ymin=88, ymax=95.5,
+  xtick={0,50,100,150,200,250,300},
+  ytick={89,90,91,92,93,94,95},
+  grid=both, grid style={line width=0.3pt, gray!30},
+  legend pos=south west,
+  title={L1 PicoDet-S：mAP@0.5 vs. Epoch（单卡，bs=32）},
+  title style={font=\small\bfseries},
+  axis line style={gray!60},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+\addplot[color=picoBlue, thick, mark=*, mark size=2pt,
+         mark options={fill=picoBlue}]
+  coordinates {
+    (10, 91.16)(20, 92.88)(30, 93.65)(40, 93.75)(50, 93.92)
+    (60, 94.25)(70, 94.30)(80, 94.10)(90, 94.18)(100, 94.19)
+    (110, 94.12)(120, 94.05)(130, 93.90)(140, 93.63)(150, 93.60)
+    (160, 93.59)(170, 93.57)(180, 93.45)(190, 93.12)(200, 93.25)
+    (210, 92.97)(220, 92.76)(230, 92.41)(240, 92.13)(250, 92.11)
+    (260, 91.92)(270, 91.74)(280, 91.65)(290, 91.58)(299, 91.42)
+  };
+\addlegendentry{L1 mAP@0.5}
+
+\addplot[color=yoloOrange, thick, dashed, domain=0:310] {91.54};
+\addlegendentry{YOLOv3 最佳 (91.54\%)}
+
+\node[font=\scriptsize, picoBlue!80!black, fill=white, draw=picoBlue!40,
+      rounded corners=2pt, inner sep=2pt]
+  at (axis cs:95, 94.5) {峰值：94.30\% @ ep.70};
+\draw[->, thin, picoBlue!60] (axis cs:90, 94.42) -- (axis cs:71, 94.32);
+
+\fill[red!10, opacity=0.5]
+  (axis cs:100, 88) rectangle (axis cs:299, 95.5);
+\node[font=\scriptsize, red!60!black]
+  at (axis cs:200, 95.15) {过拟合区间};
+
+\fill[accentGreen!15, opacity=0.6]
+  (axis cs:60, 88) rectangle (axis cs:100, 95.5);
+\node[font=\scriptsize, accentGreen!60!black, rotate=90]
+  at (axis cs:67, 92.5) {最优};
+\end{axis}
+\end{tikzpicture}
+\caption{L1 在 300 个 epoch 内的 mAP@0.5 曲线。模型在 epoch~70（绿色带）达到峰值，之后持续过拟合（红色带）。橙色虚线为 YOLOv3 最佳结果参考。}
+\label{fig:l1_curve}
+\end{figure}
+
+\subsection{PicoDet-S 消融：批量大小、GPU 数量与训练时长}
+\label{sec:results:picodet_ablation}
+
+\Cref{fig:picodet_bar} 比较了四组 L 系列运行。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=6cm,
+  ybar, bar width=1.2cm,
+  xlabel={运行}, ylabel={最佳 mAP@0.5 (\%)},
+  symbolic x coords={L1,L2,L3,L4},
+  xtick=data,
+  ymin=92.5, ymax=95.2,
+  ytick={92.5,93.0,93.5,94.0,94.5,95.0},
+  nodes near coords,
+  nodes near coords style={font=\scriptsize\bfseries, anchor=south},
+  every node near coord/.append style={yshift=1pt},
+  ymajorgrids=true, grid style={line width=0.3pt, gray!30},
+  enlarge x limits=0.2,
+  title={PicoDet-S 消融研究（L1--L4）},
+  title style={font=\small\bfseries},
+  legend style={at={(0.98,0.05)}, anchor=south east, font=\scriptsize},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+\addplot[fill=picoBlue, fill opacity=0.85, draw=picoBlue!80!black]
+  coordinates {(L1,94.30)(L2,93.80)(L3,94.10)(L4,93.50)};
+\addlegendentry{最佳 mAP@0.5}
+
+\draw[<->, thick, red!60] (axis cs:L1,94.30) -- (axis cs:L2,93.80)
+  node[midway, above, font=\scriptsize, red!70!black] {$-0.50$\,pp};
+\draw[<->, thick, accentGreen!60!black] (axis cs:L2,93.80) -- (axis cs:L3,94.10)
+  node[midway, above, font=\scriptsize, accentGreen!70!black] {$+0.30$\,pp};
+\end{axis}
+\end{tikzpicture}
+\caption{PicoDet-S 消融。L1（单卡，bs=32）尽管使用最小批量与最长每样本梯度噪声，仍达到最高精度。
+  L4（600 epoch）因超过 epoch-70 峰值后长时间过拟合，精度低于 L2（300 epoch）。}
+\label{fig:picodet_bar}
+\end{figure}
+
+得到三个反直觉观测：
+
+\paragraph{观测 1：小批量优于大批量（L1 vs L2）。}
+在线性缩放规则校正后学习率相同的前提下，L1（bs=32，1 GPU）比 L2（bs=64，2 GPU）高 0.50\,pp。
+关键差异在于梯度更新次数：L1 执行 $182\!\times\!300 = 54{,}600$ 步，而 L2 仅 $91\!\times\!300 = 27{,}300$ 步。
+更多更新步带来更丰富的随机探索，小批量梯度噪声在仅 5,828 样本的数据集上起到隐式正则化作用——与 Keskar~等~\citep{keskar2017large} 的理论结论一致。
+
+\paragraph{观测 2：大于标准的批量仍可有益（L3 vs L2）。}
+L3（bs=96，lr=0.24）比 L2（bs=64，lr=0.16）高 0.30\,pp。
+说明 L3 的略高学习率有助于优化器逃离 L2 陷入的局部最优，体现线性缩放规则下仍存在的优化轨迹差异——该规则仅在线性损失曲面上理论精确。
+
+\paragraph{观测 3：延长训练反而降低精度（L4 vs L2）。}
+将训练延长至 600 epoch 使最终最佳 mAP 降低 0.30\,pp。
+峰值已在 epoch~70 到达；\texttt{best\_model} 保存正确，但 EMA 平滑轨迹越过最优点。早停是可行的缓解手段。
+
+\subsection{YOLOv3：数据规模效应}
+\label{sec:results:yolov3_scale}
+
+\Cref{fig:yolov3_scale} 展示训练集大小对 YOLOv3 的显著影响。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=6cm,
+  ybar, bar width=1.1cm,
+  xlabel={运行}, ylabel={最佳 mAP@0.5 (\%)},
+  symbolic x coords={Y1,Y2,Y3,Y4},
+  xtick=data,
+  ymin=0, ymax=100,
+  ytick={0,10,20,30,40,50,60,70,80,90,100},
+  ymajorgrids=true, grid style={line width=0.3pt, gray!30},
+  enlarge x limits=0.2,
+  title={YOLOv3 消融：数据规模 vs. GPU 数量（Y1--Y4）},
+  title style={font=\small\bfseries},
+  legend style={at={(0.98,0.98)}, anchor=north east, font=\scriptsize},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+\addplot[fill=yoloOrange!80, fill opacity=0.85, draw=yoloOrange!80!black,
+         nodes near coords, nodes near coords style={font=\scriptsize\bfseries}]
+  coordinates {(Y1,44.40)(Y2,44.10)};
+\addlegendentry{1/3 数据集（1{,}942 张）}
+
+\addplot[fill=accentGreen!70, fill opacity=0.85, draw=accentGreen!80!black,
+         nodes near coords, nodes near coords style={font=\scriptsize\bfseries}]
+  coordinates {(Y3,91.30)(Y4,91.54)};
+\addlegendentry{全量数据集（5{,}828 张）}
+
+\draw[<->, very thick, red!70] (axis cs:Y1,44.40) -- (axis cs:Y3,91.30)
+  node[midway, above right, font=\small\bfseries, red!80!black,
+       fill=white, draw=red!40, rounded corners=2pt, inner sep=2pt]
+  {$+46.9$\,pp};
+\end{axis}
+\end{tikzpicture}
+\caption{YOLOv3 在 1/3 数据集与全量数据集训练下的 mAP。
+  +46.9 个百分点的跃升表明，锚框式检测器在从 COCO 迁移至专用二分类任务时对训练集规模高度敏感。}
+\label{fig:yolov3_scale}
+\end{figure}
+
+1/3 数据运行（Y1、Y2）无论 GPU 数量如何均稳定在 $\approx$44\% mAP。
+这一上限源于 MobileNetV1 检测头需从 COCO 的 80 类输出适配至二分类目标：仅 1,942 样本时，头无法学到足够具有判别性的特征以区分鼠类/非鼠类边界。预训练骨干提供有效低级特征，但分类层仍欠拟合。
+
+使用全量 5,828 张训练图像（Y3、Y4）时，精度升至 91.3--91.5\%，证实在小领域任务上，数据工程是锚框式检测器的主导杠杆。
+
+\subsection{YOLOv3 收敛曲线}
+\label{sec:results:yolov3_curve}
+
+\Cref{fig:y3_curve} 绘制了 YOLOv3-Y3 在 80 个 epoch 内的验证 mAP。
+曲线单调上升，至 epoch~80 仍未收敛，与 PicoDet-S 在 300 个 epoch 中 70 即达峰形成鲜明对比。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=6cm,
+  xlabel={Epoch}, ylabel={mAP@0.5 (\%)},
+  xmin=0, xmax=85, ymin=75, ymax=95,
+  xtick={0,10,20,30,40,50,60,70,80},
+  ytick={75,78,81,84,87,90,93},
+  grid=both, grid style={line width=0.3pt, gray!30},
+  title={Y3 YOLOv3-MobileNetV1：mAP@0.5 vs. Epoch（全量数据）},
+  title style={font=\small\bfseries},
+  legend pos=south east,
+  tick label style={font=\small},
+  label style={font=\small},
+]
+\addplot[color=yoloOrange, thick, mark=square*, mark size=2pt,
+         mark options={fill=yoloOrange}]
+  coordinates {
+    (5,  81.80)(10, 83.77)(15, 77.19)(20, 84.44)(25, 87.13)
+    (30, 85.95)(35, 88.86)(40, 86.76)(45, 88.48)(50, 89.62)
+    (55, 89.77)(60, 90.03)(65, 90.92)(70, 91.02)(75, 91.09)(80, 91.30)
+  };
+\addlegendentry{Y3 mAP@0.5}
+
+\addplot[picoBlue, dashed, thick, domain=0:85] {94.30};
+\addlegendentry{PicoDet-S 最佳 (94.30\%)}
+
+\draw[->, thick, yoloOrange!70!black, dashed]
+  (axis cs:80, 91.30) -- (axis cs:84.5, 92.5)
+  node[right, font=\scriptsize, yoloOrange!80!black, align=left]
+  {估计 92\%+\\于 ep.120};
+
+\node[font=\scriptsize, yoloOrange!80!black, fill=white,
+      draw=yoloOrange!40, rounded corners=2pt, inner sep=2pt]
+  at (axis cs:40, 78.5) {ep.80 仍在收敛};
+\end{axis}
+\end{tikzpicture}
+\caption{YOLOv3-Y3 收敛曲线。模型至 epoch~80 尚未达峰；外推表明 120+ epoch 可能达到 $>$92\%。
+  PicoDet-S 在 300 个 epoch 中于 70 达峰后过拟合，收敛形态截然不同。}
+\label{fig:y3_curve}
+\end{figure}
+
+\subsection{跨模型对比：精度—效率权衡}
+\label{sec:results:tradeoff}
+
+\Cref{fig:bubble} 将所有八组运行展示在二维精度—速度图上，气泡面积与模型大小成比例。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.88\textwidth, height=8cm,
+  xlabel={mAP@0.5 (\%)},
+  ylabel={推理 FPS (Tesla T4)},
+  xmin=35, xmax=96,
+  ymin=20, ymax=95,
+  grid=both, grid style={line width=0.3pt, gray!30},
+  title={精度—速度—体积权衡（气泡面积 $\propto$ 模型大小）},
+  title style={font=\small\bfseries},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue, fill=picoBlue, fill opacity=0.6]
+  coordinates {(94.30, 80)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:94.30,80) {L1};
+
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue!70, fill=picoBlue!70, fill opacity=0.6]
+  coordinates {(93.80, 77)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:93.80,77) {L2};
+
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue!85, fill=picoBlue!85, fill opacity=0.6]
+  coordinates {(94.10, 71)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:94.10,71) {L3};
+
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue!60, fill=picoBlue!60, fill opacity=0.6]
+  coordinates {(93.50, 74)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:93.50,74) {L4};
+
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange!50, fill=yoloOrange!50, fill opacity=0.5]
+  coordinates {(44.40, 36)};
+\node[font=\scriptsize\bfseries] at (axis cs:44.40,36) {Y1};
+
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange!50, fill=yoloOrange!50, fill opacity=0.5]
+  coordinates {(44.10, 36)};
+\node[font=\scriptsize\bfseries] at (axis cs:44.10,36) {Y2};
+
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange!80, fill=yoloOrange!80, fill opacity=0.6]
+  coordinates {(91.30, 36)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:91.30,36) {Y3};
+
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange, fill=yoloOrange, fill opacity=0.7]
+  coordinates {(91.54, 35)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:91.54,35) {Y4};
+
+\node[draw, fill=white, font=\scriptsize, rounded corners=3pt,
+      inner sep=4pt, align=left]
+  at (axis cs:62, 84)
+  {\textbf{形状 = 架构}\\
+   \textcolor{picoBlue}{$\bullet$} PicoDet-S (4.4\,MB)\\
+   \textcolor{yoloOrange}{$\blacksquare$} YOLOv3 (92\,MB)\\[2pt]
+   气泡大小 $\propto$ 模型大小};
+\end{axis}
+\end{tikzpicture}
+\caption{八组运行在精度—速度平面上的分布。
+  蓝色圆 = PicoDet-S (4.4\,MB)；橙色方 = YOLOv3 (92\,MB)。
+  PicoDet-S 在三个维度均占优：更高精度、更高 FPS、模型体积小 21$\times$。}
+\label{fig:bubble}
+\end{figure}
+
+\subsection{训练效率}
+
+\begin{table}[H]
+\centering
+\caption{训练效率对比。``GPU-小时''= 墙上时间 $\times$ GPU 数。}
+\label{tab:efficiency}
+\begin{tabular}{lccccr}
+\toprule
+\textbf{运行} & \textbf{mAP@0.5} & \textbf{墙上时间 (h)}
+             & \textbf{GPU-小时} & \textbf{FPS}
+             & \textbf{mAP/GPU-小时} \\
+\midrule
+L1 (1 GPU) & 94.30\% & 14.9 & 14.9 & 80 & 6.33 \\
+L2 (2 GPU) & 93.80\% &  6.7 & 13.4 & 77 & 7.00 \\
+L3 (2 GPU) & 94.10\% &  6.6 & 13.2 & 71 & 7.13 \\
+L4 (2 GPU) & 93.50\% & 13.3 & 26.6 & 74 & 3.52 \\
+\midrule
+Y3 (1 GPU) & 91.30\% & 17.4 & 17.4 & 36 & 5.25 \\
+Y4 (2 GPU) & 91.54\% &  8.8 & 17.6 & 35 & 5.20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{L3 的单位 GPU-小时 mAP 最高}（7.13 mAP\%/GPU-小时），在同时考虑精度与计算成本时推荐该配置。
+L4 性价比最低：GPU-小时为 L2 的两倍，精度反而低 0.30\,pp。

@@ -1,0 +1,418 @@
+\section{Results and Analysis}
+\label{sec:results}
+
+\subsection{Summary of All Eight Runs}
+
+\begin{table}[H]
+\centering
+\caption{Complete results for all eight training runs.
+  $\uparrow$ = higher is better.}
+\label{tab:all_results}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccccr}
+\toprule
+\textbf{Run} & \textbf{Model} & \textbf{Data} & \textbf{GPUs}
+             & \textbf{mAP@0.5 (\%)} & \textbf{Peak Epoch}
+             & \textbf{FPS} & \textbf{Time (h)} \\
+\midrule
+\rowcolor{picoBlue!10}
+L1 & PicoDet-S & full & 1 & \textbf{94.30} & 70  & 80 & 14.9 \\
+L2 & PicoDet-S & full & 2 & 93.80 & $\sim$80 & 77 &  6.7 \\
+L3 & PicoDet-S & full & 2 & 94.10 & $\sim$60 & 71 &  6.6 \\
+L4 & PicoDet-S & full & 2 & 93.50 & $\sim$140 & 74 & 13.3 \\
+\midrule
+Y1 & YOLOv3 & 1/3  & 1 & 44.40 & $\sim$65 & 36 &  6.7 \\
+Y2 & YOLOv3 & 1/3  & 2 & 44.10 & $\sim$65 & 36 &  3.5 \\
+\rowcolor{yoloOrange!10}
+Y3 & YOLOv3 & full & 1 & 91.30 & $>$80 & 36 & 17.4 \\
+\rowcolor{yoloOrange!10}
+Y4 & YOLOv3 & full & 2 & \textbf{91.54} & $>$80 & 35 &  8.8 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{PicoDet-S: Learning Curve and Overfitting}
+\label{sec:results:picodet_curve}
+
+\Cref{fig:l1_curve} shows the per-epoch mAP trace of run L1.
+The curve exhibits three distinct phases:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Rapid ascent (epochs 0--70):}
+    mAP rises from 91.16\% at epoch~10 to the global peak of
+    94.30\% at epoch~70, driven by strong COCO pre-training transfer.
+  \item \textbf{Plateau (epochs 70--100):}
+    Accuracy fluctuates within $\pm$0.1\,pp of the peak.
+  \item \textbf{Gradual overfit (epochs 100--299):}
+    mAP declines steadily to 91.42\% at the final checkpoint, a
+    drop of $-2.88$\,pp from the peak.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=6.5cm,
+  xlabel={Epoch}, ylabel={mAP@0.5 (\%)},
+  xmin=0, xmax=310, ymin=88, ymax=95.5,
+  xtick={0,50,100,150,200,250,300},
+  ytick={89,90,91,92,93,94,95},
+  grid=both, grid style={line width=0.3pt, gray!30},
+  legend pos=south west,
+  title={L1 PicoDet-S: mAP@0.5 vs.\ Epoch (Single GPU, bs=32)},
+  title style={font=\small\bfseries},
+  axis line style={gray!60},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+% mAP data points from TRAINING_REPORT.md
+\addplot[color=picoBlue, thick, mark=*, mark size=2pt,
+         mark options={fill=picoBlue}]
+  coordinates {
+    (10, 91.16)(20, 92.88)(30, 93.65)(40, 93.75)(50, 93.92)
+    (60, 94.25)(70, 94.30)(80, 94.10)(90, 94.18)(100, 94.19)
+    (110, 94.12)(120, 94.05)(130, 93.90)(140, 93.63)(150, 93.60)
+    (160, 93.59)(170, 93.57)(180, 93.45)(190, 93.12)(200, 93.25)
+    (210, 92.97)(220, 92.76)(230, 92.41)(240, 92.13)(250, 92.11)
+    (260, 91.92)(270, 91.74)(280, 91.65)(290, 91.58)(299, 91.42)
+  };
+\addlegendentry{L1 mAP@0.5}
+
+% YOLOv3 best for reference line
+\addplot[color=yoloOrange, thick, dashed, domain=0:310] {91.54};
+\addlegendentry{YOLOv3 best (91.54\%)}
+
+% Annotate peak
+\node[font=\scriptsize, picoBlue!80!black, fill=white, draw=picoBlue!40,
+      rounded corners=2pt, inner sep=2pt]
+  at (axis cs:95, 94.5) {Peak: 94.30\% @ ep.70};
+\draw[->, thin, picoBlue!60] (axis cs:90, 94.42) -- (axis cs:71, 94.32);
+
+% Shade overfitting region
+\fill[red!10, opacity=0.5]
+  (axis cs:100, 88) rectangle (axis cs:299, 95.5);
+\node[font=\scriptsize, red!60!black]
+  at (axis cs:200, 95.15) {Overfitting region};
+
+% Shade optimal zone
+\fill[accentGreen!15, opacity=0.6]
+  (axis cs:60, 88) rectangle (axis cs:100, 95.5);
+\node[font=\scriptsize, accentGreen!60!black, rotate=90]
+  at (axis cs:67, 92.5) {Optimal};
+\end{axis}
+\end{tikzpicture}
+\caption{L1 mAP@0.5 curve across 300 epochs.  The model peaks at
+  epoch~70 (green band) and exhibits persistent overfitting thereafter
+  (red band).  The dashed orange line marks the best YOLOv3 result for
+  reference.}
+\label{fig:l1_curve}
+\end{figure}
+
+\subsection{PicoDet-S Ablation: Batch Size, GPU Count, and Duration}
+\label{sec:results:picodet_ablation}
+
+\Cref{fig:picodet_bar} compares the four L-series runs.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=6cm,
+  ybar, bar width=1.2cm,
+  xlabel={Run}, ylabel={Best mAP@0.5 (\%)},
+  symbolic x coords={L1,L2,L3,L4},
+  xtick=data,
+  ymin=92.5, ymax=95.2,
+  ytick={92.5,93.0,93.5,94.0,94.5,95.0},
+  nodes near coords,
+  nodes near coords style={font=\scriptsize\bfseries, anchor=south},
+  every node near coord/.append style={yshift=1pt},
+  ymajorgrids=true, grid style={line width=0.3pt, gray!30},
+  enlarge x limits=0.2,
+  title={PicoDet-S Ablation Study (L1--L4)},
+  title style={font=\small\bfseries},
+  legend style={at={(0.98,0.05)}, anchor=south east, font=\scriptsize},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+\addplot[fill=picoBlue, fill opacity=0.85, draw=picoBlue!80!black]
+  coordinates {(L1,94.30)(L2,93.80)(L3,94.10)(L4,93.50)};
+\addlegendentry{Best mAP@0.5}
+
+% Annotate key comparison
+\draw[<->, thick, red!60] (axis cs:L1,94.30) -- (axis cs:L2,93.80)
+  node[midway, above, font=\scriptsize, red!70!black] {$-0.50$\,pp};
+\draw[<->, thick, accentGreen!60!black] (axis cs:L2,93.80) -- (axis cs:L3,94.10)
+  node[midway, above, font=\scriptsize, accentGreen!70!black] {$+0.30$\,pp};
+\end{axis}
+\end{tikzpicture}
+\caption{PicoDet-S ablation.
+  L1 (single GPU, bs=32) achieves the highest accuracy despite using the
+  smallest batch size and longest per-sample gradient noise.
+  L4 (600 epochs) underperforms L2 (300 epochs) owing to prolonged
+  overfitting past the epoch-70 peak.}
+\label{fig:picodet_bar}
+\end{figure}
+
+Three counter-intuitive observations emerge:
+
+\paragraph{Observation 1: Small batch outperforms large batch (L1 vs L2).}
+L1 (bs=32, 1 GPU) beats L2 (bs=64, 2 GPUs) by 0.50\,pp despite
+running at the same learning rate after Linear Scaling Rule correction.
+The key difference is the number of gradient updates: L1 performs
+$182\!\times\!300 = 54{,}600$ steps, versus only $91\!\times\!300 = 27{,}300$ for L2.  More update steps provide richer stochastic exploration of the
+loss landscape, and the smaller-batch gradient noise acts as implicit
+regularisation on a dataset of only 5,828 samples---consistent with
+the theoretical findings of Keskar~et~al.~\citep{keskar2017large}.
+
+\paragraph{Observation 2: Larger batch than standard can still help (L3 vs L2).}
+L3 (bs=96, lr=0.24) outperforms L2 (bs=64, lr=0.16) by 0.30\,pp.
+This suggests that the slightly higher learning rate in L3 helps
+the optimiser escape a local minimum that traps L2, illustrating
+the qualitative difference in optimisation trajectories even under
+the Linear Scaling Rule---which is theoretically exact only for
+locally linear loss surfaces.
+
+\paragraph{Observation 3: Extended training degrades accuracy (L4 vs L2).}
+Doubling training to 600 epochs reduces final best mAP by 0.30\,pp.
+The peak is already reached at epoch~70; \texttt{best\_model} is saved
+correctly, but the EMA-smoothed trajectory continues past the optimal
+point.  Early stopping would be the practical remedy.
+
+\subsection{YOLOv3: Dataset Scale Effect}
+\label{sec:results:yolov3_scale}
+
+\Cref{fig:yolov3_scale} illustrates the dramatic impact of training
+set size on YOLOv3.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=6cm,
+  ybar, bar width=1.1cm,
+  xlabel={Run}, ylabel={Best mAP@0.5 (\%)},
+  symbolic x coords={Y1,Y2,Y3,Y4},
+  xtick=data,
+  ymin=0, ymax=100,
+  ytick={0,10,20,30,40,50,60,70,80,90,100},
+  ymajorgrids=true, grid style={line width=0.3pt, gray!30},
+  enlarge x limits=0.2,
+  title={YOLOv3 Ablation: Dataset Scale vs.\ GPU Count (Y1--Y4)},
+  title style={font=\small\bfseries},
+  legend style={at={(0.98,0.98)}, anchor=north east, font=\scriptsize},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+% 1/3 data bars (orange) -- only Y1, Y2 are valid
+\addplot[fill=yoloOrange!80, fill opacity=0.85, draw=yoloOrange!80!black,
+         nodes near coords, nodes near coords style={font=\scriptsize\bfseries}]
+  coordinates {(Y1,44.40)(Y2,44.10)};
+\addlegendentry{1/3 dataset (1{,}942 imgs)}
+
+% Full data bars (green) -- only Y3, Y4 are valid
+\addplot[fill=accentGreen!70, fill opacity=0.85, draw=accentGreen!80!black,
+         nodes near coords, nodes near coords style={font=\scriptsize\bfseries}]
+  coordinates {(Y3,91.30)(Y4,91.54)};
+\addlegendentry{Full dataset (5{,}828 imgs)}
+
+% +47pp annotation
+\draw[<->, very thick, red!70] (axis cs:Y1,44.40) -- (axis cs:Y3,91.30)
+  node[midway, above right, font=\small\bfseries, red!80!black,
+       fill=white, draw=red!40, rounded corners=2pt, inner sep=2pt]
+  {$+46.9$\,pp};
+\end{axis}
+\end{tikzpicture}
+\caption{YOLOv3 mAP under 1/3-dataset vs.\ full-dataset training.
+  The +46.9 percentage-point jump demonstrates that anchor-based
+  detectors are highly sensitive to training-set size when domain-adapted
+  from COCO to a specialised two-class task.}
+\label{fig:yolov3_scale}
+\end{figure}
+
+The 1/3-dataset runs (Y1, Y2) plateau at $\approx$44\% mAP regardless
+of GPU count.  This ceiling arises because MobileNetV1's detection head
+must be adapted from COCO's 80-class output to a two-class target: with
+only 1,942 samples, the head cannot learn sufficiently discriminative
+features for the mouse/other boundary.  The pre-trained backbone
+provides useful low-level features, but the classification layer
+remains undertrained.
+
+With the full 5,828 training images (Y3, Y4), accuracy rises to
+91.3--91.5\%, confirming that data engineering is the dominant lever
+for anchor-based detectors on small-domain tasks.
+
+\subsection{YOLOv3 Convergence Curve}
+\label{sec:results:yolov3_curve}
+
+\Cref{fig:y3_curve} plots the YOLOv3-Y3 validation mAP across 80 epochs.
+The curve is monotonically increasing and has not converged at epoch~80,
+in sharp contrast to PicoDet-S which peaks at epoch~70 out of 300.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth, height=6cm,
+  xlabel={Epoch}, ylabel={mAP@0.5 (\%)},
+  xmin=0, xmax=85, ymin=75, ymax=95,
+  xtick={0,10,20,30,40,50,60,70,80},
+  ytick={75,78,81,84,87,90,93},
+  grid=both, grid style={line width=0.3pt, gray!30},
+  title={Y3 YOLOv3-MobileNetV1: mAP@0.5 vs.\ Epoch (Full Dataset)},
+  title style={font=\small\bfseries},
+  legend pos=south east,
+  tick label style={font=\small},
+  label style={font=\small},
+]
+% Y3 data: epoch 5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80
+% from train.log grep
+\addplot[color=yoloOrange, thick, mark=square*, mark size=2pt,
+         mark options={fill=yoloOrange}]
+  coordinates {
+    (5,  81.80)(10, 83.77)(15, 77.19)(20, 84.44)(25, 87.13)
+    (30, 85.95)(35, 88.86)(40, 86.76)(45, 88.48)(50, 89.62)
+    (55, 89.77)(60, 90.03)(65, 90.92)(70, 91.02)(75, 91.09)(80, 91.30)
+  };
+\addlegendentry{Y3 mAP@0.5}
+
+% Reference line: PicoDet-S L1 peak
+\addplot[picoBlue, dashed, thick, domain=0:85] {94.30};
+\addlegendentry{PicoDet-S best (94.30\%)}
+
+% Extrapolation arrow
+\draw[->, thick, yoloOrange!70!black, dashed]
+  (axis cs:80, 91.30) -- (axis cs:84.5, 92.5)
+  node[right, font=\scriptsize, yoloOrange!80!black, align=left]
+  {est.\ 92\%+\\at ep.120};
+
+\node[font=\scriptsize, yoloOrange!80!black, fill=white,
+      draw=yoloOrange!40, rounded corners=2pt, inner sep=2pt]
+  at (axis cs:40, 78.5) {Still converging at ep.80};
+\end{axis}
+\end{tikzpicture}
+\caption{YOLOv3-Y3 convergence curve.  The model has not reached its
+  peak at epoch~80; extrapolation suggests it could reach $>$92\% with
+  120+ epochs.  PicoDet-S peaks at epoch~70 out of 300 and then
+  overfits---a fundamentally different convergence profile.}
+\label{fig:y3_curve}
+\end{figure}
+
+\subsection{Cross-Model Comparison: Accuracy--Efficiency Trade-off}
+\label{sec:results:tradeoff}
+
+\Cref{fig:bubble} shows all eight runs on a two-dimensional
+accuracy--speed plot, with bubble area proportional to model size.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.88\textwidth, height=8cm,
+  xlabel={mAP@0.5 (\%)},
+  ylabel={Inference FPS (Tesla T4)},
+  xmin=35, xmax=96,
+  ymin=20, ymax=95,
+  grid=both, grid style={line width=0.3pt, gray!30},
+  title={Accuracy--Speed--Size Trade-off (bubble area $\propto$ model size)},
+  title style={font=\small\bfseries},
+  tick label style={font=\small},
+  label style={font=\small},
+]
+%% PicoDet runs: size=4.4MB -> bubble radius ~0.35cm
+%% YOLOv3 runs: size=92MB  -> bubble radius ~1.5cm
+%% pgfplots: circle node with 'scale' proportional to area
+
+% L1 - best picodet
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue, fill=picoBlue, fill opacity=0.6]
+  coordinates {(94.30, 80)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:94.30,80) {L1};
+
+% L2
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue!70, fill=picoBlue!70, fill opacity=0.6]
+  coordinates {(93.80, 77)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:93.80,77) {L2};
+
+% L3
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue!85, fill=picoBlue!85, fill opacity=0.6]
+  coordinates {(94.10, 71)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:94.10,71) {L3};
+
+% L4
+\addplot[only marks, mark=*, mark size=12pt,
+         color=picoBlue!60, fill=picoBlue!60, fill opacity=0.6]
+  coordinates {(93.50, 74)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:93.50,74) {L4};
+
+% Y1 - small dataset yolo
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange!50, fill=yoloOrange!50, fill opacity=0.5]
+  coordinates {(44.40, 36)};
+\node[font=\scriptsize\bfseries] at (axis cs:44.40,36) {Y1};
+
+% Y2
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange!50, fill=yoloOrange!50, fill opacity=0.5]
+  coordinates {(44.10, 36)};
+\node[font=\scriptsize\bfseries] at (axis cs:44.10,36) {Y2};
+
+% Y3
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange!80, fill=yoloOrange!80, fill opacity=0.6]
+  coordinates {(91.30, 36)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:91.30,36) {Y3};
+
+% Y4 - best yolo
+\addplot[only marks, mark=square*, mark size=24pt,
+         color=yoloOrange, fill=yoloOrange, fill opacity=0.7]
+  coordinates {(91.54, 35)};
+\node[font=\scriptsize\bfseries, white] at (axis cs:91.54,35) {Y4};
+
+% Legend annotations
+\node[draw, fill=white, font=\scriptsize, rounded corners=3pt,
+      inner sep=4pt, align=left]
+  at (axis cs:62, 84)
+  {\textbf{Shape = Architecture}\\
+   \textcolor{picoBlue}{$\bullet$} PicoDet-S (4.4\,MB)\\
+   \textcolor{yoloOrange}{$\blacksquare$} YOLOv3 (92\,MB)\\[2pt]
+   Bubble size $\propto$ model size};
+\end{axis}
+\end{tikzpicture}
+\caption{All eight runs on the accuracy--speed plane.
+  Blue circles = PicoDet-S (4.4\,MB); orange squares = YOLOv3 (92\,MB).
+  PicoDet-S dominates on all three dimensions: higher accuracy, higher
+  FPS, and 21$\times$ smaller model footprint.}
+\label{fig:bubble}
+\end{figure}
+
+\subsection{Training Efficiency}
+
+\begin{table}[H]
+\centering
+\caption{Training efficiency comparison.  ``GPU-hours'' = wall-clock
+  hours $\times$ number of GPUs.}
+\label{tab:efficiency}
+\begin{tabular}{lccccr}
+\toprule
+\textbf{Run} & \textbf{mAP@0.5} & \textbf{Wall time (h)}
+             & \textbf{GPU-hours} & \textbf{FPS}
+             & \textbf{mAP/GPU-hour} \\
+\midrule
+L1 (1 GPU) & 94.30\% & 14.9 & 14.9 & 80 & 6.33 \\
+L2 (2 GPU) & 93.80\% &  6.7 & 13.4 & 77 & 7.00 \\
+L3 (2 GPU) & 94.10\% &  6.6 & 13.2 & 71 & 7.13 \\
+L4 (2 GPU) & 93.50\% & 13.3 & 26.6 & 74 & 3.52 \\
+\midrule
+Y3 (1 GPU) & 91.30\% & 17.4 & 17.4 & 36 & 5.25 \\
+Y4 (2 GPU) & 91.54\% &  8.8 & 17.6 & 35 & 5.20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{L3 achieves the best accuracy-per-GPU-hour} (7.13 mAP\%/GPU-hour),
+making it the recommended configuration when both accuracy and
+computational cost matter.  L4 is the worst investment: 2$\times$ the
+GPU-hours of L2 for 0.30\,pp \emph{less} accuracy.

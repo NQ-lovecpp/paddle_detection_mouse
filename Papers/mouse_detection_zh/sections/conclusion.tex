@@ -1,0 +1,28 @@
+\section{结论}
+\label{sec:conclusion}
+
+本文在双 Tesla T4 服务器上，对实验鼠目标检测进行了涵盖数据工程、多组对照训练消融及端到端 iOS 移动端部署的系统研究。
+
+主要结论如下：
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{PicoDet-S 在三个部署维度上均优于 YOLOv3。}
+    其达到 94.30\% mAP@0.5（较 YOLOv3 最佳高出 2.76\,pp），FPS 提高 2.2$\times$，模型体积小 21$\times$（4.4\,MB vs.\ 92\,MB）。
+    无锚设计与更小输入分辨率也使其与 Apple CoreML 神经引擎完全兼容。
+
+  \item \textbf{数据规模是锚框式检测器精度的主要驱动力。}
+    将 YOLOv3 训练集从 1,942 增至 5,828 张，使 mAP 提升 46.9 个百分点（44.4\%~$\to$~91.3\%），远超任何超参数效应。
+
+  \item \textbf{线性缩放规则是近似而非恒等式。}
+    即便学习率正确缩放，单卡小批量训练（L1）仍比双卡标准批量训练（L2）高 0.50\,pp。
+    在仅 5,828 样本的数据集上，小批量的梯度噪声起到有效隐式正则化作用，这是线性缩放规则的一阶泰勒推导无法刻画的现象。
+
+  \item \textbf{小数据集微调必须采用早停。}
+    PicoDet-S 在 epoch~70 达峰后，在剩余 230 个 epoch 中持续过拟合。
+    将训练延长至 600 epoch（L4）得到的最终精度低于 300 epoch（L2）。
+
+  \item \textbf{PicoDet-S 可实现 14\,FPS 的实用 iOS 推理速度}，得益于 ONNX Runtime 的 CoreML 执行提供器；而 YOLOv3 因自定义 NMS 算子无法使用 CoreML 加速，推理约 1\,FPS。
+\end{enumerate}
+
+本研究为在有限 GPU 资源下、于小规模医学影像数据集上部署轻量检测器的实践者提供了一个有定量依据的案例。
+完整训练脚本、配置文件及部署代码已包含于项目仓库中。

@@ -1,0 +1,57 @@
+\section{模型架构}
+\label{sec:methodology}
+
+我们研究了两类检测器，代表精度—效率帕累托前沿上的不同取舍。
+
+\subsection{PicoDet-S}
+
+PicoDet~\citep{yu2021picodet} 是一种面向移动端实时推理的无锚单阶段检测器。
+PicoDet-S（小型）变体采用：
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{骨干网络：} LCNet-0.75$\times$~\citep{cui2021pp}，轻量深度可分离网络，含挤压激励块，在 ImageNet 上预训练。
+  \item \textbf{颈部：} LCPAN，轻量路径聚合网络，结合自顶向下与自底向上的特征融合。
+  \item \textbf{检测头：} TOOD 风格的任务对齐分类与回归头，采用 Varifocal Loss (VFL) 与 Distribution Focal Loss (DFL)。
+  \item \textbf{输入分辨率：} 320$\times$320。
+  \item \textbf{参数量：} $\approx$\,1.2\,M；\textbf{模型大小：} 4.4\,MB（FP32 ONNX）。
+\end{itemize}
+
+无锚设计在小数据集上尤为有利，因无需针对训练数据分布手工调优锚框配置。
+骨干与颈部使用 COCO 预训练权重；分类头为两类输出重新初始化。
+
+\subsection{YOLOv3-MobileNetV1}
+
+YOLOv3~\citep{redmon2018yolov3} 为基于锚框的多尺度检测器。
+我们采用 PaddleDetection 官方实现， backbone 为 MobileNetV1~\citep{howard2017mobilenets}：
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{骨干网络：} 在 COCO 上预训练的 MobileNetV1（80 类头舍弃，特征提取器保留）。
+  \item \textbf{检测头：} 三尺度预测（$52\!\times\!52$、$26\!\times\!26$、$13\!\times\!13$），九个默认锚框（源自 COCO）。
+  \item \textbf{输入分辨率：} 608$\times$608。
+  \item \textbf{参数量：} $\approx$\,23\,M；\textbf{模型大小：} 92\,MB（FP32 ONNX）。
+  \item \textbf{后处理：} \texttt{multiclass\_nms3}（PaddleDetection 自定义算子）。
+\end{itemize}
+
+\subsection{架构对比}
+
+\Cref{tab:arch} 对两种架构的关键属性进行了对比。
+
+\begin{table}[H]
+\centering
+\caption{两种检测器架构对比。}
+\label{tab:arch}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{属性} & \textbf{PicoDet-S} & \textbf{YOLOv3-MobileNetV1} \\
+\midrule
+检测器类型   & 无锚框      & 基于锚框 \\
+骨干网络     & LCNet-0.75$\times$ & MobileNetV1 \\
+输入尺寸     & 320$\times$320   & 608$\times$608 \\
+参数量       & $\approx$1.2\,M  & $\approx$23\,M \\
+ONNX 大小 (FP32) & 4.4\,MB          & 92\,MB \\
+Tesla T4 FPS & $\sim$80         & $\sim$35 \\
+CoreML 兼容性 & \checkmark       & $\times$（自定义 NMS 算子） \\
+COCO 预训练  & LCNet 骨干 + LCPAN 颈部 & MobileNetV1 骨干 \\
+\bottomrule
+\end{tabularx}
+\end{table}

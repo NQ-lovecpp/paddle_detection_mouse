@@ -1,0 +1,63 @@
+\section{Introduction}
+\label{sec:intro}
+
+Automated analysis of laboratory animal behaviour has become an important
+tool in biomedical research.  Reliably localising experimental mice in
+diverse cage environments---with cluttered backgrounds, partial occlusion,
+and varying lighting---is a prerequisite for downstream behaviour
+quantification tasks such as trajectory tracking and posture estimation.
+
+Classical frame-differencing or background-subtraction methods degrade in
+the presence of illumination changes or when multiple animals interact.
+Modern deep-learning object detectors offer superior robustness, but their
+real-world deployment raises two practical questions that this project
+addresses:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Training efficiency:} Given a limited GPU budget (dual
+    Tesla T4, no InfiniBand), how do batch size, learning rate, number of
+    GPUs, and dataset scale jointly affect final accuracy?
+
+  \item \textbf{Mobile deployment:} Can the trained model run on-device
+    (iPhone) at interactive frame rates without proprietary hardware
+    accelerators?
+\end{enumerate}
+
+\subsection*{Contributions}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item We curate and release a 7,286-image two-class mouse detection
+    dataset assembled from three heterogeneous sources, providing train/val
+    splits and VOC-format annotations.
+
+  \item We design and execute a $4\!\times\!2$ controlled experiment matrix
+    with learning rates derived from the Linear Scaling Rule, isolating the
+    independent effects of GPU count, batch size, training duration, and
+    dataset scale across eight training runs.
+
+  \item We identify and quantify a \emph{counter-intuitive accuracy
+    inversion}: small-batch single-GPU training (mAP = 94.30\%) surpasses
+    the standard dual-GPU configuration (mAP = 93.80\%), and explain this
+    through the implicit regularisation effect of gradient noise on
+    small datasets.
+
+  \item We document a complete deployment pipeline from PaddlePaddle
+    training through ONNX export to React Native iOS inference, recording
+    the four engineering iterations that raised throughput from 1\,FPS to
+    14\,FPS.
+
+  \item We demonstrate a striking data-scale effect on YOLOv3:
+    a 3$\times$ increase in training images yields a 47-percentage-point
+    jump in mAP, providing a concrete quantification of the
+    ``data-first'' principle for anchor-based detectors.
+\end{itemize}
+
+\subsection*{Paper Organisation}
+
+\Cref{sec:dataset} describes data collection and preprocessing.
+\Cref{sec:methodology} reviews the two model architectures.
+\Cref{sec:experiments} details the experimental design.
+\Cref{sec:results} presents quantitative results and analysis.
+\Cref{sec:deployment} covers the iOS deployment pipeline.
+\Cref{sec:future} outlines future work.
+\Cref{sec:conclusion} concludes.

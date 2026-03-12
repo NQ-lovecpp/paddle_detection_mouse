@@ -1,0 +1,113 @@
+\documentclass[12pt,a4paper]{article}
+
+%% ---- Geometry & Typography ----
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ---- Math ----
+\usepackage{amsmath,amssymb}
+
+%% ---- Graphics & Color ----
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+%% ---- Tables ----
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+%% ---- TikZ / PGFPlots ----
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, fit, backgrounds}
+\usepgfplotslibrary{fillbetween}
+
+%% ---- Code Listings ----
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+  keywordstyle=\color{blue!70},
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!60}
+}
+
+%% ---- Hyperlinks ----
+\usepackage[colorlinks=true, linkcolor=blue!70!black, citecolor=green!50!black, urlcolor=blue]{hyperref}
+\usepackage{cleveref}
+
+%% ---- Bibliography ----
+\usepackage[numbers,sort&compress]{natbib}
+
+%% ---- Misc ----
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{algorithm2e}
+\captionsetup{font=small, labelfont=bf}
+
+%% ---- Suppress minor pgfplots hbox overflows ----
+\hfuzz=5pt
+
+%% ---- Custom Colors ----
+\definecolor{picoBlue}{RGB}{41,105,176}
+\definecolor{yoloOrange}{RGB}{214,90,0}
+\definecolor{accentGreen}{RGB}{34,139,34}
+\definecolor{lightGray}{RGB}{245,245,245}
+
+%% ---- Title Info ----
+\title{
+  \vspace{-1cm}
+  {\large Technical Report}\\[0.4em]
+  \textbf{\LARGE Laboratory Mouse Detection:\\[0.2em]
+  A Systematic Study of Lightweight Object Detection\\[0.2em]
+  with Dual-GPU Training and iOS Deployment}
+}
+
+\author{
+  Shanghai Jiao Tong University School of Medicine\\
+  Network Information Center --- Deep Learning Internship\\[0.3em]
+  \texttt{PaddleDetection 2.6 $\cdot$ Dual Tesla T4 $\cdot$ React Native iOS}
+}
+
+\date{March 2026}
+
+%% ================================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\vspace{0.5em}
+\noindent\textbf{Keywords:} Object Detection, PicoDet-S, YOLOv3, Transfer Learning,
+Linear Scaling Rule, Mobile Deployment, ONNX Runtime, iOS.
+
+\newpage
+\tableofcontents
+\newpage
+
+\input{sections/introduction}
+\input{sections/dataset}
+\input{sections/methodology}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/deployment}
+\input{sections/future_work}
+\input{sections/conclusion}
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

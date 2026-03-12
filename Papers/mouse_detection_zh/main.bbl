@@ -1,0 +1,73 @@
+\begin{thebibliography}{9}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Cui et~al.(2021)Cui, Gao, Wei, Du, Guo, Dong, Lu, Zhou, Lv, Liu,
+  et~al.]{cui2021pp}
+Cheng Cui, Tingquan Gao, Shengyu Wei, Yuning Du, Ruoyu Guo, Shuilong Dong, Bin
+  Lu, Ying Zhou, Xueying Lv, Qiwen Liu, et~al.
+\newblock {PP-LCNet}: A lightweight cpu convolutional neural network.
+\newblock arXiv preprint arXiv:2109.15099, 2021.
+
+\bibitem[Everingham et~al.(2010)Everingham, Van~Gool, Williams, Winn, and
+  Zisserman]{everingham2010pascal}
+Mark Everingham, Luc Van~Gool, Christopher K.~I. Williams, John Winn, and
+  Andrew Zisserman.
+\newblock The {Pascal} visual object classes ({VOC}) challenge.
+\newblock \emph{International Journal of Computer Vision}, 88\penalty0
+  (2):\penalty0 303--338, 2010.
+
+\bibitem[Goyal et~al.(2017)Goyal, Doll{\'a}r, Girshick, Noordhuis, Wesolowski,
+  Kyrola, Tulloch, Jia, and He]{goyal2017accurate}
+Priya Goyal, Piotr Doll{\'a}r, Ross Girshick, Pieter Noordhuis, Lukasz
+  Wesolowski, Adi Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He.
+\newblock Accurate, large minibatch {SGD}: Training {ImageNet} in 1 hour.
+\newblock arXiv preprint arXiv:1706.02677, 2017.
+
+\bibitem[He et~al.(2019)He, Liu, Wang, Hu, and Yang]{he2019filter}
+Yang He, Ping Liu, Ziwei Wang, Zhilan Hu, and Yi~Yang.
+\newblock Filter pruning via geometric median for deep convolutional neural
+  networks acceleration.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, pages 4340--4349, 2019.
+
+\bibitem[Howard et~al.(2017)Howard, Zhu, Chen, Kalenichenko, Wang, Weyand,
+  Andreetto, and Adam]{howard2017mobilenets}
+Andrew~G. Howard, Menglong Zhu, Bo~Chen, Dmitry Kalenichenko, Weijun Wang,
+  Tobias Weyand, Marco Andreetto, and Hartwig Adam.
+\newblock {MobileNets}: Efficient convolutional neural networks for mobile
+  vision applications.
+\newblock arXiv preprint arXiv:1704.04861, 2017.
+
+\bibitem[Keskar et~al.(2017)Keskar, Mudigere, Nocedal, Smelyanskiy, and
+  Tang]{keskar2017large}
+Nitish~Shirish Keskar, Dheevatsa Mudigere, Jorge Nocedal, Mikhail Smelyanskiy,
+  and Ping Tak~Peter Tang.
+\newblock On large-batch training for deep learning: Generalisation gap and
+  sharp minima.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2017.
+
+\bibitem[Redmon and Farhadi(2018)]{redmon2018yolov3}
+Joseph Redmon and Ali Farhadi.
+\newblock {YOLOv3}: An incremental improvement.
+\newblock arXiv preprint arXiv:1804.02767, 2018.
+
+\bibitem[Xu et~al.(2022)Xu, Wang, Lv, Chang, Cui, Deng, Wang, Dang, Wei, Du,
+  et~al.]{xu2022ppyoloe}
+Shangliang Xu, Xinxin Wang, Wenyu Lv, Qinyao Chang, Cheng Cui, Kaipeng Deng,
+  Guanzhong Wang, Qingqing Dang, Shengyu Wei, Yuning Du, et~al.
+\newblock {PP-YOLOE}: An evolved version of {YOLO}.
+\newblock arXiv preprint arXiv:2203.16250, 2022.
+
+\bibitem[Yu et~al.(2021)Yu, Chang, Lv, Xu, Cui, Ji, Dang, Liu, Du, Lai,
+  et~al.]{yu2021picodet}
+Guanghua Yu, Qinyao Chang, Wenyu Lv, Chang Xu, Cheng Cui, Wei Ji, Qingqing
+  Dang, Kaipeng Liu, Guanzhong Du, Baohua Lai, et~al.
+\newblock {PicoDet}: A better real-time object detector on mobile devices.
+\newblock arXiv preprint arXiv:2111.00902, 2021.
+
+\end{thebibliography}

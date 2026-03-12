@@ -1,0 +1,147 @@
+\section{移动端部署}
+\label{sec:deployment}
+
+\subsection{导出流程}
+
+训练得到的 PicoDet-S L1 模型经四阶段流程导出并部署（\Cref{fig:pipeline}）：
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=0.8cm and 0.3cm,
+  box/.style={draw, rounded corners=4pt, minimum width=3.0cm,
+              minimum height=1.1cm, align=center, font=\small},
+  arrow/.style={->, thick, >=Stealth},
+  label/.style={font=\scriptsize, gray!80!black}
+]
+\node[box, fill=picoBlue!20] (train)
+  {\textbf{训练}\\PaddleDetection 2.6\\Tesla T4 $\times$2};
+
+\node[box, fill=picoBlue!10, right=1.4cm of train] (export)
+  {\textbf{导出}\\Paddle Inference\\(w/ \& w/o NMS)};
+
+\node[box, fill=accentGreen!15, right=1.4cm of export] (onnx)
+  {\textbf{ONNX 转换}\\paddle2onnx\\Opset 11};
+
+\node[box, fill=yoloOrange!15, right=1.4cm of onnx] (ios)
+  {\textbf{iOS 应用}\\ONNX Runtime\\+ CoreML ANE};
+
+\draw[arrow] (train) -- (export)
+  node[above, label, midway] {best\_model.pdparams};
+\draw[arrow] (export) -- (onnx)
+  node[above, label, midway] {pdmodel};
+\draw[arrow] (onnx) -- (ios)
+  node[above, label, midway] {4.4\,MB ONNX};
+
+\node[label, below=0.25cm of train] {mAP 94.30\%};
+\node[label, below=0.25cm of export, align=center] {无 NMS\\适配 CoreML};
+\node[label, below=0.25cm of onnx, align=center] {onnx.checker\\已验证};
+\node[label, below=0.25cm of ios, align=center] {React Native\\ONNX Runtime};
+
+\node[draw, dashed, rounded corners, fit=(train)(export)(onnx)(ios),
+      inner sep=10pt,
+      label={[font=\scriptsize\itshape]above:端到端部署流程}] {};
+\end{tikzpicture}}
+\caption{从 PaddlePaddle 训练到 iOS 设备端推理的端到端部署流程。}
+\label{fig:pipeline}
+\end{figure}
+
+各阶段关键决策：
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{无 NMS 导出：}标准 PicoDet 导出会在计算图中包含 NMS。
+    为 iOS 部署，我们使用 \texttt{--export\_serving\_model=False} 生成\emph{无 NMS} 图，其输出（原始框 + 分数）与 CoreML 内置 NMS 原语兼容。
+
+  \item \textbf{ONNX Opset 11：}无 NMS PicoDet-S 图中的所有算子均可映射为标准 ONNX Opset~11 原语，避免了使 YOLOv3 无法使用 CoreML 的 \texttt{multiclass\_nms3} 自定义算子。
+
+  \item \textbf{React Native + ONNX Runtime：}iOS 应用基于 React Native（TypeScript）构建，
+    使用 \texttt{onnxruntime-react-native} 包。
+    图像帧在原生 Swift 模块（\texttt{Image\-Preprocessor.swift}）中预处理，
+    通过 Metal 的 \texttt{vImage} 管线将 YUV 帧转换为设备端归一化 RGB 张量，
+    避免 CPU 端像素格式转换。
+\end{itemize}
+
+\subsection{YOLOv3 部署难点}
+
+YOLOv3 为首个部署的模型；其暴露了与 CoreML 的关键不兼容问题（\Cref{tab:deploy_compare}）：
+
+\begin{table}[H]
+\centering
+\caption{YOLOv3 与 PicoDet-S 部署难点对比。}
+\label{tab:deploy_compare}
+\begin{tabular}{lll}
+\toprule
+\textbf{方面} & \textbf{YOLOv3-MobileNetV1} & \textbf{PicoDet-S} \\
+\midrule
+ONNX 大小     & 92\,MB  & 4.4\,MB \\
+自定义算子   & \texttt{multiclass\_nms3} & 无 \\
+CoreML 支持  & 受阻（自定义算子） & 完整（标准算子） \\
+Metal GPU 加速 & 否（回退至 CPU） & 是（ANE + GPU） \\
+iOS FPS      & $\sim$1\,FPS & 14\,FPS（热机） \\
+输入尺寸     & 608$\times$608 & 320$\times$320 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+YOLOv3 的 1\,FPS 瓶颈源于无法将 \texttt{multiclass\_nms3} 算子卸载至 Metal，导致整个推理图在 CPU 上以 32 位浮点运算和 608$\times$608 输入张量运行。
+
+\subsection{迭代优化至 14\,FPS}
+
+PicoDet-S 部署经四轮工程迭代优化（\Cref{fig:fps_iter}）：
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=5.5cm,
+  xlabel={迭代}, ylabel={iOS 推理 FPS},
+  symbolic x coords={v1,v2,v3,v4},
+  xtick=data,
+  xticklabels={v1 基线, v2 Swift, v3 CoreML, v4 调优},
+  ymin=0, ymax=18,
+  ytick={0,2,4,6,8,10,12,14,16},
+  nodes near coords, nodes near coords align=above,
+  nodes near coords style={font=\small\bfseries},
+  ymajorgrids=true, grid style={line width=0.3pt, gray!30},
+  enlarge x limits=0.3,
+  title={iOS 推理速度：四轮工程迭代},
+  title style={font=\small\bfseries},
+  tick label style={font=\scriptsize},
+  label style={font=\small},
+]
+\addplot[
+  mark=*, mark size=4pt, thick,
+  color=accentGreen, fill=accentGreen,
+  mark options={fill=accentGreen},
+]
+  coordinates {(v1,1)(v2,4)(v3,10)(v4,14)};
+
+\node[font=\scriptsize, gray!70!black, align=center]
+  at (axis cs:v1, 2.5) {YUV 解码\\在 CPU};
+\node[font=\scriptsize, gray!70!black, align=center]
+  at (axis cs:v2, 5.5) {Metal\\vImage};
+\node[font=\scriptsize, gray!70!black, align=center]
+  at (axis cs:v3, 11.5) {ONNX\\CoreML EP};
+\node[font=\scriptsize, gray!70!black, align=center]
+  at (axis cs:v4, 15.5) {稳定\\热机};
+\end{axis}
+\end{tikzpicture}
+\caption{PicoDet-S 在 iPhone 上四轮工程迭代的推理速度。
+  主要提升来自 (a) 将图像预处理卸载至 Metal vImage 管线，以及 (b) 启用 ONNX Runtime 的 CoreML 执行提供器以获得 ANE 加速。}
+\label{fig:fps_iter}
+\end{figure}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{v1 —— JavaScript 基线（$\sim$1\,FPS）：}
+    帧解码与归一化在 JavaScript（TypeScript）中完成，导致跨 JS 桥的过度内存拷贝。
+
+  \item \textbf{v2 —— Swift 原生预处理（$\sim$4\,FPS）：}
+    将图像预处理移至 \texttt{ImagePreprocessor.swift}，采用 Metal \texttt{vImage} 管线。消除 JS 桥开销。
+
+  \item \textbf{v3 —— CoreML 执行提供器（$\sim$10\,FPS）：}
+    启用 ONNX Runtime 中的 \texttt{CoreML\-Execution\-Provider}，将 ONNX 图编译为 Apple 神经引擎（ANE）可执行形式。
+
+  \item \textbf{v4 —— 线程调优，热机稳定（$\sim$14\,FPS）：}
+    将推理线程数设为与 A 系列性能核数量匹配；在热机稳态下测量（模型已加载，缓存预热）。
+\end{itemize}

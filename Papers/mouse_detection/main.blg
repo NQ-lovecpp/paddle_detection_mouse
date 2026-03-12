@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: plainnat.bst
+Database file #1: references.bib
+Warning--empty booktitle in everingham2010pascal
+Warning--can't use both volume and number fields in everingham2010pascal
+You've used 9 entries,
+            2773 wiz_defined-function locations,
+            638 strings with 7088 characters,
+and the built_in function-call counts, 6408 in all, are:
+= -- 482
+> -- 627
+< -- 4
++ -- 210
+- -- 201
+* -- 576
+:= -- 1011
+add.period$ -- 28
+call.type$ -- 9
+change.case$ -- 91
+chr.to.int$ -- 9
+cite$ -- 20
+duplicate$ -- 234
+empty$ -- 396
+format.name$ -- 212
+if$ -- 1310
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 9
+newline$ -- 53
+num.names$ -- 36
+pop$ -- 214
+preamble$ -- 1
+purify$ -- 82
+quote$ -- 0
+skip$ -- 207
+stack$ -- 0
+substring$ -- 90
+swap$ -- 39
+text.length$ -- 3
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 99
+warning$ -- 2
+while$ -- 33
+width$ -- 0
+write$ -- 118
+(There were 2 warnings)

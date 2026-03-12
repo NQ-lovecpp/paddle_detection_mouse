@@ -1,0 +1,113 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+%% ---- Geometry & Typography ----
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ---- Math ----
+\usepackage{amsmath,amssymb}
+
+%% ---- Graphics & Color ----
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+%% ---- Tables ----
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+%% ---- TikZ / PGFPlots ----
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, fit, backgrounds}
+\usepgfplotslibrary{fillbetween}
+
+%% ---- Code Listings ----
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+  keywordstyle=\color{blue!70},
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!60}
+}
+
+%% ---- Hyperlinks ----
+\usepackage[colorlinks=true, linkcolor=blue!70!black, citecolor=green!50!black, urlcolor=blue]{hyperref}
+\usepackage{cleveref}
+
+%% ---- Bibliography ----
+\usepackage[numbers,sort&compress]{natbib}
+
+%% ---- Misc ----
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{algorithm2e}
+\captionsetup{font=small, labelfont=bf}
+
+%% ---- Suppress minor pgfplots hbox overflows ----
+\hfuzz=5pt
+
+%% ---- Custom Colors ----
+\definecolor{picoBlue}{RGB}{41,105,176}
+\definecolor{yoloOrange}{RGB}{214,90,0}
+\definecolor{accentGreen}{RGB}{34,139,34}
+\definecolor{lightGray}{RGB}{245,245,245}
+
+%% ---- Title Info ----
+\title{
+  \vspace{-1cm}
+  {\large 技术报告}\\[0.4em]
+  \textbf{\LARGE 实验鼠目标检测：\\[0.2em]
+  双GPU训练与iOS部署下的\\[0.2em]
+  轻量目标检测系统研究}
+}
+
+\author{
+  上海交通大学医学院\\
+  网络信息中心 · 深度学习实习项目\\[0.3em]
+  \texttt{PaddleDetection 2.6 $\cdot$ 双 Tesla T4 $\cdot$ React Native iOS}
+}
+
+\date{2026年3月}
+
+%% ================================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\vspace{0.5em}
+\noindent\textbf{关键词：} 目标检测、PicoDet-S、YOLOv3、迁移学习、
+线性缩放规则、移动端部署、ONNX Runtime、iOS。
+
+\newpage
+\tableofcontents
+\newpage
+
+\input{sections/introduction}
+\input{sections/dataset}
+\input{sections/methodology}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/deployment}
+\input{sections/future_work}
+\input{sections/conclusion}
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

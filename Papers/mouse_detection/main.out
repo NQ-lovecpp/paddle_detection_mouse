@@ -1,0 +1,35 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Dataset and Data Engineering}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Data Sources}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Preprocessing and Annotation Unification}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Dataset Statistics}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{One-Third Subset for Ablation}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Model Architectures}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{PicoDet-S}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{YOLOv3-MobileNetV1}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{Architecture Comparison}{section.3}% 10
+\BOOKMARK [1][-]{section.4}{Experimental Design}{}% 11
+\BOOKMARK [2][-]{subsection.4.1}{Linear Scaling Rule}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.2}{Experiment Matrix}{section.4}% 13
+\BOOKMARK [3][-]{subsubsection.4.2.1}{PicoDet-S \(L-series, full dataset\)}{subsection.4.2}% 14
+\BOOKMARK [3][-]{subsubsection.4.2.2}{YOLOv3 \(Y-series, variable dataset\)}{subsection.4.2}% 15
+\BOOKMARK [2][-]{subsection.4.3}{Infrastructure}{section.4}% 16
+\BOOKMARK [2][-]{subsection.4.4}{Evaluation Protocol}{section.4}% 17
+\BOOKMARK [1][-]{section.5}{Results and Analysis}{}% 18
+\BOOKMARK [2][-]{subsection.5.1}{Summary of All Eight Runs}{section.5}% 19
+\BOOKMARK [2][-]{subsection.5.2}{PicoDet-S: Learning Curve and Overfitting}{section.5}% 20
+\BOOKMARK [2][-]{subsection.5.3}{PicoDet-S Ablation: Batch Size, GPU Count, and Duration}{section.5}% 21
+\BOOKMARK [2][-]{subsection.5.4}{YOLOv3: Dataset Scale Effect}{section.5}% 22
+\BOOKMARK [2][-]{subsection.5.5}{YOLOv3 Convergence Curve}{section.5}% 23
+\BOOKMARK [2][-]{subsection.5.6}{Cross-Model Comparison: Accuracy\205Efficiency Trade-off}{section.5}% 24
+\BOOKMARK [2][-]{subsection.5.7}{Training Efficiency}{section.5}% 25
+\BOOKMARK [1][-]{section.6}{Mobile Deployment}{}% 26
+\BOOKMARK [2][-]{subsection.6.1}{Export Pipeline}{section.6}% 27
+\BOOKMARK [2][-]{subsection.6.2}{YOLOv3 Deployment Challenges}{section.6}% 28
+\BOOKMARK [2][-]{subsection.6.3}{Iterative Optimisation to 14FPS}{section.6}% 29
+\BOOKMARK [1][-]{section.7}{Future Work}{}% 30
+\BOOKMARK [2][-]{subsection.7.1}{Group A: Model Scaling}{section.7}% 31
+\BOOKMARK [2][-]{subsection.7.2}{Group B: YOLOv3 Convergence Fix}{section.7}% 32
+\BOOKMARK [2][-]{subsection.7.3}{Group C: Compression Pipeline}{section.7}% 33
+\BOOKMARK [2][-]{subsection.7.4}{Recommended Priority}{section.7}% 34
+\BOOKMARK [1][-]{section.8}{Conclusion}{}% 35

@@ -1,0 +1,38 @@
+# Y5: YOLOv3-MobileNetV1，全量数据，双卡，120 epoch + 自定义 Anchor
+# 目的：解决 Y4 的两个已知问题——epoch 不足（80e 时 mAP 仍在上升）+ COCO 默认 anchors 不匹配
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=8/卡 = 16 total，linear scale: lr = 0.01 × (16/64) = 0.0025
+# milestones 按 60%/80% × 120 epoch = [72, 96]
+#
+# 自定义 Anchors（来自 B1：在 mouse_other_voc 上 K-means n_clusters=9）
+# 运行：python tools/anchor_cluster.py -c configs/yolov3/runs/Y5_yolov3_full_2gpu_120e.yml -n 9 -s 608,608
+# 将聚类结果按面积升序分为三组，填入 YOLOv3Head.anchors（小→大 对应 stride 32→16→8）
+_BASE_: ['../yolov3_my_dog_mouse_voc.yml']
+
+save_dir: output/Y5_yolov3_full_2gpu_120e
+epoch: 120
+snapshot_epoch: 5
+worker_num: 8
+
+LearningRate:
+  base_lr: 0.0025
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 72
+    - 96
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 1500
+
+# 自定义 Anchors（K-means 聚类结果占位，运行 anchor_cluster.py 后替换为实际值）
+# 格式说明：anchors 三行对应三个检测头，每行三对 [w, h]，stride 由大到小（32, 16, 8）
+# 若尚未聚类，暂用 COCO 默认值（与 Y4 等同，后续更新）
+YOLOv3Head:
+  # K-means 聚类结果（n=9，608×608，avg_iou=0.7798）
+  # 按面积升序排列，0~2=小，3~5=中，6~8=大
+  anchors: [[77, 123], [94, 237], [149, 177],
+            [152, 357], [235, 248], [252, 469],
+            [371, 334], [383, 515], [524, 540]]
+  anchor_masks: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]

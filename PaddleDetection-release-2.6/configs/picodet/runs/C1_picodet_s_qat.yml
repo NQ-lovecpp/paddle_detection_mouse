@@ -1,0 +1,37 @@
+# C1: PicoDet-S QAT 量化——主训练配置
+# 使用方式：配合 --slim_config 参数，不直接内嵌 slim 键
+#
+# 运行命令（run_experiments_round2.py 会自动构造）：
+#   python -m paddle.distributed.launch --gpus 0,1 tools/train.py \
+#     -c configs/picodet/runs/C1_picodet_s_qat.yml \
+#     --slim_config configs/slim/quant/C1_qat_mouse_overrides.yml \
+#     --eval --use_vdl=true
+#
+# 目的：FP32（4.4MB）→ INT8（~1.2MB），精度损失控制在 1% 以内
+# 基于：L1 best_model.pdparams（mAP@0.5=94.30%）进行 QAT 微调
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=48/卡 = 96 total；50 epoch；base_lr=0.001
+_BASE_: ['../picodet_s_320_voc_mouse.yml']
+
+save_dir: output/C1_picodet_s_qat
+epoch: 50
+snapshot_epoch: 5
+worker_num: 8
+use_shared_memory: True
+find_unused_parameters: True
+use_ema: false    # QAT 阶段关闭 EMA
+
+TrainReader:
+  batch_size: 48  # 48/卡 × 2 卡 = 96 total
+
+LearningRate:
+  base_lr: 0.001
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 30
+    - 40
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 100

@@ -1,0 +1,68 @@
+\section{Future Work}
+\label{sec:future}
+
+Building on the eight-run baseline, we identify three groups of
+follow-up experiments that address remaining open questions.
+
+\subsection{Group A: Model Scaling}
+
+\paragraph{A1 -- PicoDet-M.}
+PicoDet-M (medium variant, $\approx$4.8\,M parameters, 8.2\,MB) is
+expected to provide a higher accuracy ceiling.  We plan a 300-epoch
+dual-GPU run with the same full dataset and Linear Scaling Rule
+hyperparameters, estimating mAP could reach 95.5--96.0\%.
+
+\paragraph{A2 -- PP-YOLOE+-S.}
+PP-YOLOE+~\citep{xu2022ppyoloe} is an anchor-free redesign of the YOLO
+family with decoupled head and task-aligned assignment, alleviating the
+anchor-sensitivity issue observed in YOLOv3.  A 30-epoch fine-tuning
+run (the VOC-specific schedule used in PaddleDetection) should allow
+direct comparison with YOLOv3-Y4 at similar model size.
+
+\subsection{Group B: YOLOv3 Convergence Fix}
+
+\paragraph{B1 -- K-means anchor clustering.}
+The default COCO-derived anchors may be suboptimal for our
+mouse-detection box aspect-ratio distribution.  Running
+\texttt{tools/anchor\_cluster.py} will produce nine dataset-specific
+anchors via K-means, potentially accelerating convergence and raising
+the ceiling of Y3/Y4.
+
+\paragraph{B2 -- Y5: 120-epoch run with custom anchors.}
+With B1's anchors embedded, a 120-epoch run is expected to allow
+YOLOv3 to fully converge (recall that Y3/Y4 were still rising at
+epoch~80) and potentially surpass 92\% mAP.
+
+\paragraph{B3 -- Box distribution analysis.}
+Visualising the bounding-box size and aspect-ratio distribution across
+the training set will expose whether small or occluded mice constitute
+a long-tail performance problem.
+
+\subsection{Group C: Compression Pipeline}
+
+\paragraph{C1 -- Quantization-Aware Training (QAT).}
+PaddleSlim QAT on the L1 best model is expected to produce an INT8
+model of $\approx$1.1\,MB with $<$0.3\,pp accuracy degradation,
+improving iOS inference further.
+
+\paragraph{C2 -- FPGM structural pruning on YOLOv3.}
+Filter Pruning via Geometric Median~\citep{he2019filter} targeting 30\%
+FLOPs reduction on YOLOv3-Y4, followed by fine-tuning,
+could reduce the ONNX size from 92\,MB to $\approx$60\,MB.
+Note that the CoreML custom-operator issue must be resolved
+independently; pruning alone will not enable Metal acceleration.
+
+\paragraph{C3 -- Knowledge distillation.}
+Using a larger teacher (e.g., PicoDet-L or RT-DETR) to distil
+into PicoDet-S may recover the accuracy gap between L1 and a
+hypothetical higher-accuracy model, without increasing deployment cost.
+
+\subsection{Recommended Priority}
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item B3 (box distribution analysis) -- zero training cost, immediate insight.
+  \item A1 (PicoDet-M) -- highest expected accuracy gain.
+  \item B1+B2 (custom anchors + Y5) -- validates the data-engineering thesis.
+  \item C1 (QAT) -- direct path to further iOS speed improvement.
+  \item A2, C2, C3 -- exploratory; lower marginal ROI given current results.
+\end{enumerate}

@@ -1,0 +1,38 @@
+\section{引言}
+\label{sec:intro}
+
+实验室动物行为的自动分析已成为生物医学研究的重要工具。
+在多样化笼养环境中可靠地定位实验鼠——包括杂乱背景、部分遮挡及光照变化——是轨迹追踪、姿态估计等下游行为量化任务的前提。
+
+经典的光帧差分或背景减除方法在光照变化或多动物交互时性能下降。
+现代深度学习目标检测器具有更强的鲁棒性，但其实际部署涉及本文着力解决的两个实际问题：
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{训练效率：}在有限 GPU 预算（双 Tesla T4，无 InfiniBand）下，批量大小、学习率、GPU 数量及数据规模如何共同影响最终精度？
+
+  \item \textbf{移动端部署：}训练得到的模型能否在设备端（iPhone）以交互帧率运行，而无需专用硬件加速器？
+\end{enumerate}
+
+\subsection*{贡献}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item 我们构建并发布了一个 7,286 张图像的二分类实验鼠检测数据集，由三个异构数据源整合而成，提供训练/验证划分及 VOC 格式标注。
+
+  \item 我们设计并执行了 $4\!\times\!2$ 对照实验矩阵，学习率依据线性缩放规则设定，在八组训练中单独考察 GPU 数量、批量大小、训练时长及数据规模的影响。
+
+  \item 我们发现并量化了\emph{反直觉的精度反转}：小批量单卡训练（mAP = 94.30\%）优于标准双卡配置（mAP = 93.80\%），并通过小数据集上梯度噪声的隐式正则化效应进行解释。
+
+  \item 我们记录了从 PaddlePaddle 训练、ONNX 导出到 React Native iOS 推理的完整部署流程，记录了将吞吐从 1\,FPS 提升至 14\,FPS 的四轮工程迭代。
+
+  \item 我们展示了数据规模对 YOLOv3 的显著影响：训练图像增加 3$\times$ 使 mAP 提升 46.9 个百分点（44.4\%~$\to$~91.3\%），为锚框式检测器的“数据优先”原则提供了定量依据。
+\end{itemize}
+
+\subsection*{论文结构}
+
+\Cref{sec:dataset} 描述数据采集与预处理。
+\Cref{sec:methodology} 介绍两种模型架构。
+\Cref{sec:experiments} 详述实验设计。
+\Cref{sec:results} 呈现定量结果与分析。
+\Cref{sec:deployment} 介绍 iOS 部署流程。
+\Cref{sec:future} 概述后续工作。
+\Cref{sec:conclusion} 总结全文。

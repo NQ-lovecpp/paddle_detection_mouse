@@ -1,0 +1,18 @@
+# C1 QAT slim 配置：从 L1 best_model 微调（非 COCO 原始权重）
+# 覆盖 picodet_s_quant.yml 的 pretrain_weights 字段
+pretrain_weights: output/L1_picodet_1gpu/L1_picodet_1gpu/best_model.pdparams
+slim: QAT
+
+QAT:
+  quant_config: {
+    'activation_preprocess_type': 'PACT',
+    'weight_quantize_type': 'channel_wise_abs_max',
+    'activation_quantize_type': 'moving_average_abs_max',
+    'weight_bits': 8,
+    'activation_bits': 8,
+    'dtype': 'int8',
+    'window_size': 10000,
+    'moving_rate': 0.9,
+    'quantizable_layer_type': ['Conv2D', 'Linear']
+  }
+  print_model: False

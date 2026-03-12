@@ -1,0 +1,101 @@
+\section{数据集与数据工程}
+\label{sec:dataset}
+
+\subsection{数据来源}
+
+数据集由三个异构来源整合而成：
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{实验室采集。}
+    于上海交通大学医学院实验笼内拍摄的图像，使用 VOC XML 标注格式进行标注。
+    覆盖多种光照条件与笼舍配置。
+
+  \item \textbf{开源数据集。}
+    公开的啮齿动物图像集，经重新标注并映射至我们的二分类体系。
+
+  \item \textbf{网络爬取图像。}
+    通过关键词检索获取的照片，经人工筛选剔除近重复与错误标注样本。
+\end{enumerate}
+
+\subsection{预处理与标注统一}
+
+所有图像统一为 Pascal VOC 格式~\citep{everingham2010pascal}，并采用一致的两类标签体系：
+\texttt{mouse}（实验鼠，\textit{Mus musculus}）与 \texttt{other}（其他非鼠前景目标）。
+预处理步骤包括：
+
+\begin{itemize}[leftmargin=1.5em]
+  \item 标签统一：合并同义类别名称（\textit{rat}、\textit{mice}、\textit{rodent}~$\to$~\texttt{mouse}）。
+  \item 近重复剔除：使用感知哈希，汉明距离阈值为 4。
+  \item 边界框质量筛选：剔除宽高比 $>$10 或面积 $<$ 400\,px\textsuperscript{2} 的框。
+\end{itemize}
+
+\subsection{数据集统计}
+
+\Cref{tab:dataset} 汇总了预处理后的数据集规模。
+
+\begin{table}[H]
+\centering
+\caption{预处理后的数据集概况。}
+\label{tab:dataset}
+\begin{tabular}{lrr}
+\toprule
+\textbf{划分} & \textbf{图像数} & \textbf{占比} \\
+\midrule
+训练集（全量） & 5{,}828 & 79.9\% \\
+验证集       & 1{,}458 & 20.1\% \\
+\midrule
+\textbf{总计}  & \textbf{7{,}286} & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{用于消融实验的三分之一子集}
+\label{sec:dataset:subset}
+
+为量化数据规模对 YOLOv3 的影响（见\Cref{fig:dataset_split}），我们通过分层随机抽样脚本
+（\texttt{scripts/prepare\_1of3\_dataset.py}）
+生成了包含 1,942 张图像的三分之一训练子集。
+\emph{验证集在全量与子集实验间共享}，以保证 mAP 可直接对比。
+该设计将训练集大小作为 Y1/Y2 组（1,942 张）与 Y3/Y4 组（5,828 张）间的唯一变量。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small]
+  % Full dataset box
+  \node[draw, fill=picoBlue!15, rounded corners, minimum width=5cm,
+        minimum height=1.2cm, align=center] (full)
+        at (0,0) {\textbf{全量数据集}\\7,286 张图像};
+
+  % Split arrow
+  \draw[->, thick] (full.south) -- ++(0,-0.6)
+    node[below, xshift=-2.4cm] {}
+    node[below, xshift=2.4cm] {};
+
+  \node[draw, fill=picoBlue!25, rounded corners, minimum width=2.8cm,
+        minimum height=1cm, align=center] (train)
+        at (-2.5,-2.0) {\textbf{训练}\\5,828};
+  \node[draw, fill=accentGreen!25, rounded corners, minimum width=2.8cm,
+        minimum height=1cm, align=center] (val)
+        at (2.5,-2.0) {\textbf{验证}\\1,458};
+
+  \draw[->, thick] (0,-0.6) -- (train.north);
+  \draw[->, thick] (0,-0.6) -- (val.north);
+
+  % 1/3 subset
+  \node[draw, fill=yoloOrange!20, rounded corners, minimum width=2.8cm,
+        minimum height=1cm, align=center, dashed] (subset)
+        at (-2.5,-3.6) {\textbf{1/3 子集}\\1,942};
+  \draw[->, dashed, thick] (train.south) -- (subset.north)
+    node[midway, right, xshift=2pt] {\scriptsize 分层抽样};
+
+  % Shared val annotation
+  \draw[<->, thick, accentGreen!70!black] (subset.east) -- (val.south)
+    node[midway, below, sloped, xshift=6pt] {\scriptsize 共享验证集};
+
+  % Labels
+  \node[above right=0.1cm of full, font=\scriptsize\itshape]
+    {所有来源统一为 VOC 格式};
+\end{tikzpicture}
+\caption{数据集划分设计。验证集在全量与三分之一子集实验间共享，以便直接进行 mAP 比较。}
+\label{fig:dataset_split}
+\end{figure}

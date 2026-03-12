@@ -1,0 +1,30 @@
+# C2: YOLOv3-MobileNetV1 FPGM 结构剪枝——主训练配置
+# 使用方式：配合 --slim_config 参数
+#
+# 运行命令：
+#   python tools/train.py \
+#     -c configs/yolov3/runs/C2_yolov3_fpgm_prune.yml \
+#     --slim_config configs/slim/prune/C2_fpgm_mouse_overrides.yml \
+#     --eval
+#
+# 目的：92MB → ~60MB，精度损失 <2%；为简历压缩对比实验提供数据
+# 基于：Y4 best_model.pdparams fine-tune 40 epoch
+# 卡数：1    CUDA_VISIBLE_DEVICES=0（剪枝 fine-tune 单卡即可）
+_BASE_: ['../yolov3_my_dog_mouse_voc.yml']
+
+save_dir: output/C2_yolov3_fpgm_prune
+epoch: 40
+snapshot_epoch: 5
+worker_num: 6
+
+LearningRate:
+  base_lr: 0.000625   # fine-tune 用更小 lr
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 24
+    - 32
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 500

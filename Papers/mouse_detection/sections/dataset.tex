@@ -1,0 +1,111 @@
+\section{Dataset and Data Engineering}
+\label{sec:dataset}
+
+\subsection{Data Sources}
+
+The dataset is assembled from three heterogeneous sources:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Laboratory captures.}
+    Images taken inside experimental cages at Shanghai Jiao Tong University
+    School of Medicine, annotated in-house with VOC XML labels.
+    These cover diverse lighting conditions and cage configurations.
+
+  \item \textbf{Open-source datasets.}
+    Publicly available rodent image collections, re-annotated and mapped
+    to our two-class schema.
+
+  \item \textbf{Web-crawled images.}
+    Photographs retrieved via keyword search, manually inspected and
+    cleaned to remove near-duplicates and mislabelled samples.
+\end{enumerate}
+
+\subsection{Preprocessing and Annotation Unification}
+
+All images are normalised to Pascal VOC format~\citep{everingham2010pascal}
+with a unified two-class label vocabulary:
+\texttt{mouse} (experimental mouse, \textit{Mus musculus}) and
+\texttt{other} (any non-mouse foreground object).
+Preprocessing steps include:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Label harmonisation: merging synonymous class names (\textit{rat},
+    \textit{mice}, \textit{rodent}~$\to$~\texttt{mouse}).
+  \item Near-duplicate removal using perceptual hashing with a Hamming
+    distance threshold of 4.
+  \item Bounding-box quality filtering: boxes with aspect ratio $>$10 or
+    area $<$ 400\,px\textsuperscript{2} are discarded.
+\end{itemize}
+
+\subsection{Dataset Statistics}
+
+\begin{table}[H]
+\centering
+\caption{Dataset summary after preprocessing.}
+\label{tab:dataset}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Split} & \textbf{Images} & \textbf{Fraction} \\
+\midrule
+Training (full) & 5{,}828 & 79.9\% \\
+Validation      & 1{,}458 & 20.1\% \\
+\midrule
+\textbf{Total}  & \textbf{7{,}286} & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{One-Third Subset for Ablation}
+\label{sec:dataset:subset}
+
+To quantify the effect of dataset scale on YOLOv3, we generate a
+one-third training subset of 1,942 images using a script that performs
+stratified random sampling at the file level
+(\texttt{scripts/prepare\_1of3\_dataset.py}).
+The \emph{validation set is shared} between the full and subset
+experiments, ensuring that mAP values are directly comparable.
+This design isolates training-set size as the sole variable between
+experiment groups Y1/Y2 (1,942 train images) and Y3/Y4 (5,828 train images).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small]
+  % Full dataset box
+  \node[draw, fill=picoBlue!15, rounded corners, minimum width=5cm,
+        minimum height=1.2cm, align=center] (full)
+        at (0,0) {\textbf{Full Dataset}\\7,286 images};
+
+  % Split arrow
+  \draw[->, thick] (full.south) -- ++(0,-0.6)
+    node[below, xshift=-2.4cm] {}
+    node[below, xshift=2.4cm] {};
+
+  \node[draw, fill=picoBlue!25, rounded corners, minimum width=2.8cm,
+        minimum height=1cm, align=center] (train)
+        at (-2.5,-2.0) {\textbf{Train}\\5,828};
+  \node[draw, fill=accentGreen!25, rounded corners, minimum width=2.8cm,
+        minimum height=1cm, align=center] (val)
+        at (2.5,-2.0) {\textbf{Val}\\1,458};
+
+  \draw[->, thick] (0,-0.6) -- (train.north);
+  \draw[->, thick] (0,-0.6) -- (val.north);
+
+  % 1/3 subset
+  \node[draw, fill=yoloOrange!20, rounded corners, minimum width=2.8cm,
+        minimum height=1cm, align=center, dashed] (subset)
+        at (-2.5,-3.6) {\textbf{1/3 Subset}\\1,942};
+  \draw[->, dashed, thick] (train.south) -- (subset.north)
+    node[midway, right, xshift=2pt] {\scriptsize stratified sample};
+
+  % Shared val annotation
+  \draw[<->, thick, accentGreen!70!black] (subset.east) -- (val.south)
+    node[midway, below, sloped, xshift=6pt] {\scriptsize shared val};
+
+  % Labels
+  \node[above right=0.1cm of full, font=\scriptsize\itshape]
+    {All sources unified to VOC format};
+\end{tikzpicture}
+\caption{Dataset split design.  The validation set is shared between
+full and one-third-subset experiments to enable direct mAP comparison.}
+\label{fig:dataset_split}
+\end{figure}

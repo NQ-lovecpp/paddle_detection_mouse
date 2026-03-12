@@ -1,0 +1,49 @@
+# A1: PicoDet-M 320，双卡，补全精度-参数曲线
+# 目的：对比 PicoDet-S（L1/L2），验证更大网络是否在 5828 张样本上继续受益
+# 卡数：2    CUDA_VISIBLE_DEVICES=0,1
+# bs=48/卡 = 96 total，linear scale: lr = 0.16 × (96/64) = 0.24
+# 预期：精度在 L1（94.30%）基础上再涨 0.5~1%；模型约 10MB
+_BASE_: ['../picodet_s_320_voc_mouse.yml']
+
+save_dir: output/M1_picodet_m_2gpu
+epoch: 300
+snapshot_epoch: 10
+worker_num: 8
+use_shared_memory: True
+find_unused_parameters: True
+use_ema: true
+
+# PicoDet-M：LCNet-x1.5（官方 M 档 scale），neck/head 宽度 128
+LCNet:
+  scale: 1.5          # M 档：官方 picodet_v2.yml 默认 scale（即 M=1.5，S=0.75）
+  feature_maps: [3, 4, 5]
+
+LCPAN:
+  out_channels: 128   # M 档 neck 宽度
+
+PicoHeadV2:
+  conv_feat:
+    name: PicoFeat
+    feat_in: 128
+    feat_out: 128
+    num_convs: 4      # M 档 head 更深（官方配置）
+    num_fpn_stride: 4
+    norm_type: bn
+    share_cls_reg: True
+    use_se: True
+  feat_in_chan: 128
+
+# COCO 预训练全量模型（非仅 backbone），迁移学习效果更好
+pretrain_weights: https://paddledet.bj.bcebos.com/models/picodet_m_320_coco_lcnet.pdparams
+
+TrainReader:
+  batch_size: 48      # 48/卡 × 2 卡 = 96 total
+
+LearningRate:
+  base_lr: 0.24       # 0.16 × (96/64) = 0.24
+  schedulers:
+  - name: CosineDecay
+    max_epochs: 300
+  - name: LinearWarmup
+    start_factor: 0.1
+    steps: 300

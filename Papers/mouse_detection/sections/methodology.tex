@@ -1,0 +1,72 @@
+\section{Model Architectures}
+\label{sec:methodology}
+
+We study two families of detectors, chosen to represent complementary
+points on the accuracy--efficiency Pareto frontier.
+
+\subsection{PicoDet-S}
+
+PicoDet~\citep{yu2021picodet} is an anchor-free single-stage detector
+designed for real-time mobile inference.  The PicoDet-S variant
+(``small'') uses:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Backbone:} LCNet-0.75$\times$~\citep{cui2021pp},
+    a lightweight depthwise-separable network with squeeze-excitation
+    blocks, pre-trained on ImageNet.
+  \item \textbf{Neck:} LCPAN, a lightweight path-aggregation network
+    combining top-down and bottom-up feature fusion.
+  \item \textbf{Head:} TOOD-style task-aligned classification and
+    regression heads with Varifocal Loss (VFL) and Distribution Focal
+    Loss (DFL).
+  \item \textbf{Input resolution:} 320$\times$320.
+  \item \textbf{Parameters:} $\approx$\,1.2\,M; \textbf{model size:}
+    4.4\,MB (FP32 ONNX).
+\end{itemize}
+
+The anchor-free design is particularly advantageous on small datasets
+because it eliminates the need for hand-tuned anchor configurations
+that must match the training data distribution.
+COCO pre-training weights are used for the backbone and neck; the
+classification head is re-initialised for two output classes.
+
+\subsection{YOLOv3-MobileNetV1}
+
+YOLOv3~\citep{redmon2018yolov3} is an anchor-based multi-scale detector.
+We use the official PaddleDetection implementation with
+MobileNetV1~\citep{howard2017mobilenets} as the backbone:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Backbone:} MobileNetV1 pre-trained on COCO (80-class head
+    discarded; feature extractor retained).
+  \item \textbf{Detection head:} Three-scale prediction ($52\!\times\!52$,
+    $26\!\times\!26$, $13\!\times\!13$), nine default anchors
+    (COCO-derived).
+  \item \textbf{Input resolution:} 608$\times$608.
+  \item \textbf{Parameters:} $\approx$\,23\,M; \textbf{model size:}
+    92\,MB (FP32 ONNX).
+  \item \textbf{Post-processing:} \texttt{multiclass\_nms3}
+    (PaddleDetection custom operator).
+\end{itemize}
+
+\subsection{Architecture Comparison}
+
+\begin{table}[H]
+\centering
+\caption{Architecture comparison between the two detector families.}
+\label{tab:arch}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{Property} & \textbf{PicoDet-S} & \textbf{YOLOv3-MobileNetV1} \\
+\midrule
+Detector type       & Anchor-free      & Anchor-based \\
+Backbone            & LCNet-0.75$\times$ & MobileNetV1 \\
+Input size          & 320$\times$320   & 608$\times$608 \\
+Parameters          & $\approx$1.2\,M  & $\approx$23\,M \\
+ONNX size (FP32)    & 4.4\,MB          & 92\,MB \\
+FPS on Tesla T4     & $\sim$78         & $\sim$35 \\
+CoreML compatibility & \checkmark       & $\times$ (custom NMS op) \\
+COCO pre-train      & LCNet backbone + LCPAN neck & MobileNetV1 backbone \\
+\bottomrule
+\end{tabularx}
+\end{table}

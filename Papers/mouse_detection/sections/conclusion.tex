@@ -1,0 +1,47 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented a systematic study of laboratory mouse detection
+covering data engineering, controlled multi-run training ablations,
+and end-to-end iOS mobile deployment on a dual-Tesla-T4 server.
+
+Our main findings are:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{PicoDet-S is superior to YOLOv3 on all three deployment
+    dimensions.}  It achieves 94.30\% mAP@0.5 (+2.76\,pp over YOLOv3's
+    best), runs at 2.2$\times$ higher FPS, and is 21$\times$ smaller
+    (4.4\,MB vs.\ 92\,MB).  The anchor-free design and smaller input
+    resolution also make it fully compatible with Apple's CoreML
+    Neural Engine.
+
+  \item \textbf{Dataset scale is the primary driver of accuracy for
+    anchor-based detectors.}  Tripling the YOLOv3 training set from
+    1,942 to 5,828 images yields a +47-percentage-point jump in mAP,
+    dwarfing any hyperparameter effect.
+
+  \item \textbf{The Linear Scaling Rule is an approximation, not an
+    identity.}  Even with correctly scaled learning rates, single-GPU
+    small-batch training (L1) outperforms dual-GPU standard-batch
+    training (L2) by 0.50\,pp.  On a dataset of only 5,828 samples,
+    gradient noise from smaller batches acts as effective implicit
+    regularisation, a well-known phenomenon that the first-order Taylor
+    derivation of the scaling rule cannot capture.
+
+  \item \textbf{Early stopping is essential for small-dataset
+    fine-tuning.}  PicoDet-S peaks at epoch~70 and then overfits for
+    the remaining 230 epochs of the 300-epoch schedule.  Doubling the
+    schedule to 600 epochs (L4) yields lower final accuracy than 300
+    epochs (L2).
+
+  \item \textbf{A practical iOS inference speed of 14\,FPS is achievable}
+    with PicoDet-S via the CoreML execution provider in ONNX Runtime,
+    compared to $\sim$1\,FPS for YOLOv3 which is blocked from CoreML
+    acceleration by a custom NMS operator.
+\end{enumerate}
+
+This work provides a concrete, quantitatively grounded case study for
+practitioners deploying lightweight detectors on small medical-imaging
+datasets with limited GPU resources.  The complete training scripts,
+configuration files, and deployment code are available in the
+project repository.

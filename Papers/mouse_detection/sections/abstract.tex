@@ -1,0 +1,35 @@
+We present a systematic study on laboratory mouse detection using the
+PaddleDetection~2.6 framework on a dual Tesla T4 GPU server.
+Starting from three heterogeneous data sources, we construct a
+7,286-image VOC-format dataset (5,828 train / 1,458 val) covering
+two classes: \textit{mouse} and \textit{other}.
+We design a $4\!\times\!2$ controlled-variable experiment matrix
+spanning two model families (PicoDet-S and YOLOv3-MobileNetV1),
+two GPU configurations (single / dual card), and two data scales
+(full dataset / one-third subset), yielding eight training runs
+totalling approximately 270 GPU-hours.
+
+Learning rates are derived from the Linear Scaling Rule
+($\eta = \eta_\text{base}\!\times\! B/B_\text{ref}$) to isolate
+the effect of batch size from parallelism.
+Our best model, PicoDet-S with single-GPU small-batch training
+(batch\,=\,32, lr\,=\,0.08), achieves \textbf{mAP@0.5 = 94.30\%}
+at epoch~70, outperforming YOLOv3's best result
+(91.54\%) by \textbf{+2.76 percentage points} while being
+\textbf{21$\times$ smaller} (4.4\,MB vs.\ 92\,MB) and running at
+\textbf{2.2$\times$ higher FPS} on the same GPU.
+A counter-intuitive finding is that the small-batch single-GPU run
+outperforms the standard dual-GPU run (+0.5\,pp), which we attribute
+to gradient noise acting as implicit regularisation on the
+5,828-sample dataset.
+
+The trained PicoDet-S model is exported to ONNX, integrated into a
+React Native application with ONNX Runtime and CoreML back-end,
+and deployed on an iPhone.  Through four engineering iterations,
+inference speed improves from 1\,FPS to a stable \textbf{14\,FPS}
+in warm-machine conditions.
+We also study the dramatic effect of dataset scale on YOLOv3:
+tripling the training set (1,942~$\to$~5,828 images) lifts mAP
+by \textbf{+47 percentage points} (44.1\%~$\to$~91.5\%),
+confirming that data engineering is the primary driver of accuracy
+for anchor-based heavy architectures on small-domain datasets.

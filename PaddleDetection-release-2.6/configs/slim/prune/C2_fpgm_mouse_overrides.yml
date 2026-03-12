@@ -1,0 +1,16 @@
+# C2 FPGM 剪枝 slim 配置：从 Y4 best_model fine-tune
+pretrain_weights: output/Y4_yolov3_full_2gpu/Y4_yolov3_full_2gpu/best_model.pdparams
+slim: Pruner
+
+Pruner:
+  criterion: fpgm
+  pruned_params: ['conv2d_27.w_0', 'conv2d_28.w_0', 'conv2d_29.w_0',
+                  'conv2d_30.w_0', 'conv2d_31.w_0', 'conv2d_32.w_0',
+                  'conv2d_34.w_0', 'conv2d_35.w_0', 'conv2d_36.w_0',
+                  'conv2d_37.w_0', 'conv2d_38.w_0', 'conv2d_39.w_0',
+                  'conv2d_41.w_0', 'conv2d_42.w_0', 'conv2d_43.w_0',
+                  'conv2d_44.w_0', 'conv2d_45.w_0', 'conv2d_46.w_0']
+  pruned_ratios: [0.1, 0.2, 0.2, 0.2, 0.2, 0.1,
+                  0.2, 0.3, 0.3, 0.3, 0.2, 0.1,
+                  0.3, 0.4, 0.4, 0.4, 0.4, 0.3]
+  print_params: False

@@ -1,0 +1,46 @@
+\contentsline {section}{\numberline {1}Introduction}{5}{section.1}%
+\contentsline {section}{\numberline {2}Dataset and Data Engineering}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Data Sources}{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Preprocessing and Annotation Unification}{6}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Dataset Statistics}{7}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}One-Third Subset for Ablation}{7}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Model Architectures}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}PicoDet-S}{7}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}YOLOv3-MobileNetV1}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Architecture Comparison}{9}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Experimental Design}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Linear Scaling Rule}{9}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Experiment Matrix}{9}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}PicoDet-S (L-series, full dataset)}{9}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}YOLOv3 (Y-series, variable dataset)}{10}{subsubsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.3}Infrastructure}{10}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Evaluation Protocol}{10}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Results and Analysis}{11}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Summary of All Eight Runs}{11}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}PicoDet-S: Learning Curve and Overfitting}{11}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}PicoDet-S Ablation: Batch Size, GPU Count, and Duration}{12}{subsection.5.3}%
+\contentsline {paragraph}{Observation 1: Small batch outperforms large batch (L1 vs L2).}{12}{section*.12}%
+\contentsline {paragraph}{Observation 2: Larger batch than standard can still help (L3 vs L2).}{13}{section*.13}%
+\contentsline {paragraph}{Observation 3: Extended training degrades accuracy (L4 vs L2).}{13}{section*.14}%
+\contentsline {subsection}{\numberline {5.4}YOLOv3: Dataset Scale Effect}{13}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}YOLOv3 Convergence Curve}{14}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Cross-Model Comparison: Accuracy--Efficiency Trade-off}{14}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}Training Efficiency}{15}{subsection.5.7}%
+\contentsline {section}{\numberline {6}Mobile Deployment}{15}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Export Pipeline}{15}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}YOLOv3 Deployment Challenges}{16}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Iterative Optimisation to 14\tmspace +\thinmuskip {.1667em}FPS}{17}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Future Work}{17}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Group A: Model Scaling}{17}{subsection.7.1}%
+\contentsline {paragraph}{A1 -- PicoDet-M.}{17}{section*.22}%
+\contentsline {paragraph}{A2 -- PP-YOLOE+-S.}{18}{section*.23}%
+\contentsline {subsection}{\numberline {7.2}Group B: YOLOv3 Convergence Fix}{18}{subsection.7.2}%
+\contentsline {paragraph}{B1 -- K-means anchor clustering.}{18}{section*.24}%
+\contentsline {paragraph}{B2 -- Y5: 120-epoch run with custom anchors.}{18}{section*.25}%
+\contentsline {paragraph}{B3 -- Box distribution analysis.}{18}{section*.26}%
+\contentsline {subsection}{\numberline {7.3}Group C: Compression Pipeline}{18}{subsection.7.3}%
+\contentsline {paragraph}{C1 -- Quantization-Aware Training (QAT).}{18}{section*.27}%
+\contentsline {paragraph}{C2 -- FPGM structural pruning on YOLOv3.}{18}{section*.28}%
+\contentsline {paragraph}{C3 -- Knowledge distillation.}{18}{section*.29}%
+\contentsline {subsection}{\numberline {7.4}Recommended Priority}{18}{subsection.7.4}%
+\contentsline {section}{\numberline {8}Conclusion}{19}{section.8}%

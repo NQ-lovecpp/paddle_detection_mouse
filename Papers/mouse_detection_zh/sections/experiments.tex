@@ -1,0 +1,84 @@
+\section{实验设计}
+\label{sec:experiments}
+
+\subsection{线性缩放规则}
+
+所有学习率均依据 Goyal~等~\citep{goyal2017accurate} 的线性缩放规则确定：
+
+\begin{equation}
+  \eta = \eta_\text{base} \times \frac{B_\text{total}}{B_\text{ref}},
+  \label{eq:lsr}
+\end{equation}
+
+\noindent 其中 $B_\text{total}$ 为总有效批量大小（每卡批量 $\times$ GPU 数），$B_\text{ref}$ 为参考批量大小，$\eta_\text{base}$ 为对应参考学习率。
+参考取值为：
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{PicoDet-S：} $\eta_\text{base}=0.08$，$B_\text{ref}=32$（单卡基线）。
+  \item \textbf{YOLOv3：} $\eta_\text{base}=0.00125$，$B_\text{ref}=16$（单卡基线，每卡 batch=16）。
+\end{itemize}
+
+所有运行在开始均采用 300 步线性预热，随后为余弦衰减。
+
+\subsection{实验矩阵}
+
+\subsubsection{PicoDet-S（L 系列，全量数据）}
+
+四组运行在保持 5,828 张训练图像不变的前提下，变化 GPU 数量、每卡批量大小及训练时长（\Cref{tab:picodet_config}）。
+
+\begin{table}[H]
+\centering
+\caption{PicoDet-S 实验配置（L 系列）。}
+\label{tab:picodet_config}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{运行} & \textbf{GPU} & \textbf{BS/GPU} & \textbf{总 BS}
+             & \textbf{学习率} & \textbf{Epoch}
+             & \textbf{每 Epoch 步数} & \textbf{说明} \\
+\midrule
+L1 & 1 & 32 & 32  & 0.08 & 300 & 182 & 单卡基线 \\
+L2 & 2 & 32 & 64  & 0.16 & 300 &  91 & 双卡标准 \\
+L3 & 2 & 48 & 96  & 0.24 & 300 &  61 & 大批量 \\
+L4 & 2 & 32 & 64  & 0.16 & 600 &  91 & 延长训练 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsubsection{YOLOv3（Y 系列，可变数据规模）}
+
+四组运行在 $2\!\times\!2$ 因子设计中同时变化 GPU 数量与训练集大小（\Cref{tab:yolov3_config}）。
+所有运行均采用 80 个 epoch，每卡批量 16。
+
+\begin{table}[H]
+\centering
+\caption{YOLOv3 实验配置（Y 系列）。}
+\label{tab:yolov3_config}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{运行} & \textbf{GPU} & \textbf{总 BS}
+             & \textbf{学习率} & \textbf{训练图像} & \textbf{Epoch}
+             & \textbf{说明} \\
+\midrule
+Y1 & 1 & 16  & 0.00125 & 1{,}942 & 80 & 1/3 数据，单卡 \\
+Y2 & 2 & 32  & 0.00250 & 1{,}942 & 80 & 1/3 数据，双卡 \\
+Y3 & 1 & 16  & 0.00125 & 5{,}828 & 80 & 全量数据，单卡 \\
+Y4 & 2 & 32  & 0.00250 & 5{,}828 & 80 & 全量数据，双卡 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{基础设施}
+
+所有实验在配备双 NVIDIA Tesla T4（各 15\,GB 显存）的服务器上运行。
+多 GPU 通信通过 TCP 使用 GLOO 后端（因无 InfiniBand 而未使用 NCCL），对当前模型规模开销可忽略。
+实测双卡加速比为 1.97--2.22$\times$，接近理论 $2\times$ 上限。
+
+训练由两个链式执行的 Python 脚本编排（L 系列为 \texttt{run\_lightweight.py}，Y 系列为 \texttt{run\_yolov3.py}），依次启动运行，将指标记录至 \texttt{output/} 下各组目录，并写入汇总 CSV 文件。
+
+\subsection{评估协议}
+
+模型精度以 mAP@0.5（IoU 阈值 0.5 下的平均精度均值）衡量，采用 PaddleDetection 评估流程提供的 COCO 风格积分计算。
+每 10 个 epoch 在共享的 1,458 张验证集上评估一次；\texttt{best\_model.pdparams} 在达到新高时更新。
+FPS 在相同 Tesla T4 服务器上、batch size~1，使用框架内置 profiler 测量。
